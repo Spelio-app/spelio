@@ -9,10 +9,18 @@ It does not add native login, sync, analytics, ads, subscriptions, push notifica
 - Package name / application ID: `app.spelio.twa`
 - App name: `Spelio`
 - Launch URL: `https://spelio.app`
+- Minimum SDK: 23
+- Compile SDK: 36
+- Target SDK: 36
+- Android Gradle Plugin: 8.13.2
+- Gradle wrapper: 8.13
+- Required JDK: 17
 - TWA dependency: `com.google.androidbrowserhelper:androidbrowserhelper:2.7.2`
 - Native permissions: none declared
 
 The TWA opens the existing PWA. When Digital Asset Links verification succeeds, Chrome removes the Custom Tab browser UI and presents the site in app form.
+
+The launcher keeps compact displays in portrait and leaves displays at least 600dp wide responsive to the user's orientation. Android 16 ignores application orientation restrictions on large screens, which is consistent with this tablet behaviour.
 
 The stock TWA launcher does not currently expose its installed native `versionName` or `versionCode` to web content. Spelio therefore does not guess from the Android user agent or show a Play update notice. Hosted web deployments are not native wrapper updates. See [`docs/native_app_update_notices.md`](../docs/native_app_update_notices.md) for the audit and future-safe options.
 

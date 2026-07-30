@@ -531,7 +531,7 @@ export const cy = {
     privacyBody3: 'Gallwch ddileu’r cynnydd lleol hwn unrhyw bryd drwy ddefnyddio “Ailosod cynnydd” yn y Gosodiadau.',
     privacyBody4: 'Gall Spelio gasglu gwybodaeth ddefnydd ddienw er mwyn helpu i wella’r ap, megis sesiynau a ddechreuwyd, sesiynau a gwblhawyd, rhestrau geiriau a ymarferwyd, ac a yw nodweddion fel adolygu neu ddatgelu yn cael eu defnyddio. Defnyddir y wybodaeth hon dim ond i ddeall beth sy’n ddefnyddiol a beth sydd angen ei wella.',
     privacyBody5: 'Nid yw Spelio yn gwerthu data personol, nid yw’n defnyddio tracwyr hysbysebu, ac nid oes angen cyfrif defnyddiwr.',
-    aboutBody1: 'Y fersiwn gyhoeddus bresennol: 1.0.2. Adeiladwyd gan Sam Gerrard.',
+    aboutBody1: 'Y fersiwn gyhoeddus bresennol: 1.0.3. Adeiladwyd gan Sam Gerrard.',
     aboutBody2: 'Mae Spelio yn helpu dysgwyr i feithrin hyder mewn sillafu Cymraeg drwy wrando, cofio ac ymarfer sillafu dro ar ôl tro.',
     aboutBody3: 'Gall sillafu Cymraeg edrych yn anghyfarwydd ar y dechrau, ond mae’n aml yn fwy rhagweladwy nag y mae’n ymddangos. Mae Spelio yn helpu dysgwyr i gysylltu Cymraeg llafar â Chymraeg ysgrifenedig ac i sylwi ar batrymau sillafu cyffredin dros amser.',
     aboutBody4: 'Mae wedi’i gynllunio i ategu adnoddau eraill ar gyfer dysgu Cymraeg, nid i gymryd eu lle.',

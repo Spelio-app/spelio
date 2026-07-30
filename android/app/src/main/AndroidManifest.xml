@@ -17,12 +17,11 @@
             android:resource="@string/asset_statements" />
 
         <activity
-            android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
+            android:name=".SpelioLauncherActivity"
             android:exported="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_round"
-            android:screenOrientation="@integer/launcher_screen_orientation"
             android:theme="@style/TwaTheme">
 
             <meta-data

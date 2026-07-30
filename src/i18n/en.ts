@@ -531,7 +531,7 @@ export const en = {
     privacyBody3: 'You can delete this local progress at any time using Reset progress in Settings.',
     privacyBody4: 'Spelio may collect anonymous usage information to help improve the app, such as sessions started, sessions completed, word lists practised, and whether features like review or reveal are being used. This information is used only to understand what is useful and what needs improving.',
     privacyBody5: 'Spelio does not sell personal data, does not use advertising trackers, and does not require a user account.',
-    aboutBody1: 'Current public release: 1.0.2. Built by Sam Gerrard.',
+    aboutBody1: 'Current public release: 1.0.3. Built by Sam Gerrard.',
     aboutBody2: 'Spelio helps learners build confidence in Welsh spelling through listening, recall, and repeated spelling practice.',
     aboutBody3: 'Welsh spelling can look unfamiliar at first, but it is often more predictable than it appears. Spelio helps learners connect spoken Welsh with written Welsh and notice common spelling patterns over time.',
     aboutBody4: 'It is designed to complement other Welsh learning resources, not replace them.',
