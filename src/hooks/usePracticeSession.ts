@@ -454,6 +454,9 @@ export function usePracticeSession({
           completedNormalSessionCount: reviewDifficult || includeRecapDue
             ? storageRef.current.completedNormalSessionCount
             : (storageRef.current.completedNormalSessionCount ?? 0) + 1,
+          pendingManualListSelection: reviewDifficult || includeRecapDue
+            ? storageRef.current.pendingManualListSelection
+            : false,
           recentlyResolvedReviewWordIds: reviewDifficult || includeRecapDue
             ? storageRef.current.recentlyResolvedReviewWordIds
             : []

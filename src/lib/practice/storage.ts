@@ -69,6 +69,7 @@ export interface SpelioStorage {
   selectedListIds: string[];
   currentPathPosition: string | null;
   hasManualWordListSelection: boolean;
+  pendingManualListSelection: boolean;
   hasStartedPracticeSession: boolean;
   hasSeenFirstPracticeHint: boolean;
   lastSessionDate: string | null;
@@ -136,6 +137,7 @@ export const defaultStorage: SpelioStorage = {
   selectedListIds: ['foundation_patterns_d_dd'],
   currentPathPosition: 'foundation_patterns_d_dd',
   hasManualWordListSelection: false,
+  pendingManualListSelection: false,
   hasStartedPracticeSession: false,
   hasSeenFirstPracticeHint: false,
   lastSessionDate: null,
@@ -229,6 +231,7 @@ export function normaliseStorage(value: unknown): SpelioStorage {
     selectedListIds: Array.isArray(source.selectedListIds) ? source.selectedListIds.filter(id => typeof id === 'string') : defaultStorage.selectedListIds,
     currentPathPosition: typeof source.currentPathPosition === 'string' ? source.currentPathPosition : defaultStorage.currentPathPosition,
     hasManualWordListSelection: typeof source.hasManualWordListSelection === 'boolean' ? source.hasManualWordListSelection : defaultStorage.hasManualWordListSelection,
+    pendingManualListSelection: typeof source.pendingManualListSelection === 'boolean' ? source.pendingManualListSelection : defaultStorage.pendingManualListSelection,
     hasStartedPracticeSession: typeof source.hasStartedPracticeSession === 'boolean' ? source.hasStartedPracticeSession : defaultStorage.hasStartedPracticeSession,
     hasSeenFirstPracticeHint: typeof source.hasSeenFirstPracticeHint === 'boolean' ? source.hasSeenFirstPracticeHint : defaultStorage.hasSeenFirstPracticeHint,
     lastSessionDate: typeof source.lastSessionDate === 'string' ? source.lastSessionDate : null,
@@ -337,6 +340,7 @@ export function applyManualWordListSelection(storage: SpelioStorage, selectedLis
     selectedListIds: selectedListId ? [selectedListId] : [],
     currentPathPosition: selectedListId ?? null,
     hasManualWordListSelection: Boolean(selectedListId),
+    pendingManualListSelection: Boolean(selectedListId),
     lastSessionResult: null
   };
 }

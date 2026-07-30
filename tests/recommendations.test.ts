@@ -89,6 +89,7 @@ test('brand-new storage defaults to the Welsh Foundations D / DD list', () => {
   assertEqual(storage.selectedListIds[0], 'foundation_patterns_d_dd', 'Brand-new storage should start at D / DD.');
   assertEqual(storage.currentPathPosition, 'foundation_patterns_d_dd', 'Brand-new path position should start at D / DD.');
   assertEqual(storage.hasManualWordListSelection, false, 'Brand-new storage should not treat the default recommendation as manual selection.');
+  assertEqual(storage.pendingManualListSelection, false, 'Brand-new storage should not have a pending manual-selection override.');
   assertEqual(isFirstTimeManualWordListSelection(storage), false, 'Brand-new storage should keep the Foundations recommendation flow.');
 });
 
@@ -3533,6 +3534,7 @@ test('Done saves one selected list without starting practice', () => {
   assertEqual(saved.selectedListIds[0], 'stage2_work', 'Done should save the pending selected list');
   assertEqual(saved.currentPathPosition, 'stage2_work', 'Done should move the path position to the selected list');
   assertEqual(saved.hasManualWordListSelection, true, 'Done should mark the selected list as an explicit learner choice');
+  assertEqual(saved.pendingManualListSelection, true, 'Done should preserve the manual choice through the next normal session');
   assertEqual(isFirstTimeManualWordListSelection(saved), true, 'First-time manual selection should activate the homepage override');
   assertEqual(saved.hasStartedPracticeSession, false, 'Done must not mark practice as started');
   assertEqual(saved.lastSessionResult, null, 'Done should clear stale session-derived state');
@@ -3547,6 +3549,57 @@ test('manual selection marker expires after first practice start', () => {
 
   assertEqual(isFirstTimeManualWordListSelection(selected), true, 'Manual selection should be active before practice starts.');
   assertEqual(isFirstTimeManualWordListSelection(started), false, 'Manual first-time override should not affect returning homepage starts.');
+});
+
+test('manual library selection stays primary with unresolved difficult words from every entry origin', () => {
+  const reviewedList = wordLists.find(list => list.id === 'stage2_people');
+  const selectedList = wordLists.find(list => list.id === 'stage3_time_phrases');
+  assert(reviewedList && selectedList, 'Expected People & Family and Time & Routine lists');
+  const difficultWord = reviewedList.words[0];
+  assert(difficultWord, 'Expected a reviewed People & Family word');
+
+  let afterReview = applyWordProgressPatch(
+    {
+      ...createDefaultStorage(),
+      selectedListIds: [reviewedList.id],
+      currentPathPosition: reviewedList.id,
+      completedNormalSessionCount: 2,
+      lastSessionResult: {
+        totalWords: 1,
+        correctWords: 0,
+        incorrectWords: 1,
+        revealedWords: 0,
+        incorrectAttempts: 1,
+        revealedLetters: 0,
+        durationSeconds: 10,
+        listIds: [reviewedList.id],
+        wordIds: [difficultWord.id],
+        state: 'struggled'
+      }
+    },
+    difficultWord,
+    { incorrect: true },
+    '2026-05-05T00:00:00.000Z'
+  );
+  assertEqual(getRecommendation(afterReview, wordLists).kind, 'review', 'Without a fresh manual choice, difficult-word review should remain primary');
+
+  for (const origin of ['home', 'ordinary-end', 'difficult-review-end']) {
+    const selected = applyManualWordListSelection(afterReview, [selectedList.id]);
+    const recommendation = getRecommendation(selected, wordLists);
+    const start = createPrimaryRecommendationPracticeStart(selected, wordLists);
+    const session = createPracticeSession(wordLists, start.storage, start.review, start.recap);
+
+    assertEqual(recommendation.kind, 'list', `${origin}: manual selection should replace review as the primary recommendation`);
+    assertEqual(recommendation.listId, selectedList.id, `${origin}: primary recommendation should use Time & Routine`);
+    assertEqual(selected.selectedListIds[0], selectedList.id, `${origin}: selection should persist through selectedListIds`);
+    assertEqual(selected.currentPathPosition, selectedList.id, `${origin}: selection should persist through currentPathPosition`);
+    assertEqual(selected.lastSessionResult, null, `${origin}: stale review completion should be cleared`);
+    assertEqual(selected.wordProgress[difficultWord.id]?.difficult, true, `${origin}: unresolved difficult progress must remain stored`);
+    assertEqual(start.mode, 'normal', `${origin}: primary action should create a normal session`);
+    assertEqual(session.listIds[0], selectedList.id, `${origin}: normal session should use the manually selected list`);
+    assertEqual(session.words.every(word => word.listId === selectedList.id), true, `${origin}: recap injection must not substitute another list`);
+    assertEqual(selectPreSessionRecapWord(start.storage, wordLists, session.words), undefined, `${origin}: fresh manual selection should bypass automatic recap injection`);
+  }
 });
 
 test('closing word list modal discards pending changes', () => {

@@ -142,7 +142,7 @@ export function getRecommendation(storage: SpelioStorage, lists: WordList[], t?:
   const difficultWordsExist = hasDifficultWords(storage, recommendationLists);
   const selectedLists = getSelectedLists(normalizeSingleSelectedListIds(storage.selectedListIds, recommendationLists), recommendationLists);
 
-  if (difficultWordsExist) {
+  if (difficultWordsExist && !storage.pendingManualListSelection) {
     return {
       kind: 'review',
       listId: selectedLists.length === 1 ? selectedLists[0].id : undefined,

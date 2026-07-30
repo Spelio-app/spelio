@@ -449,7 +449,7 @@ function selectedNormalListHasActivePrimer(storage: SpelioStorage, lists: WordLi
 }
 
 export function selectPreSessionRecapWord(storage: SpelioStorage, lists: WordList[], sessionWords: PracticeWord[], reviewDifficult = false) {
-  if (reviewDifficult || (storage.completedNormalSessionCount ?? 0) < 2) return undefined;
+  if (reviewDifficult || storage.pendingManualListSelection || (storage.completedNormalSessionCount ?? 0) < 2) return undefined;
   if (selectedNormalListHasActivePrimer(storage, lists)) return undefined;
 
   const sessionWordIds = new Set(sessionWords.map(word => word.id));

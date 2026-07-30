@@ -105,6 +105,7 @@ export function createDirectListPracticeStart(
     recap: false,
     storage: withPracticeStarted({
       ...applyPracticeStartListSelection(storage, list.id),
+      pendingManualListSelection: true,
       lastSessionResult: null
     }),
     recommendation: {
