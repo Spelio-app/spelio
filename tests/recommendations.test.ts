@@ -4078,3 +4078,54 @@ test('pre-session recap prefers resolved confidence-building words without repea
 
   assertEqual(selected?.id, 'resolved_easy_older', 'Quick recap should prefer resolved, lower/moderate words that have not already had a clean recap pass');
 });
+
+test('historical review and recap resolve only through current active learner-facing content', () => {
+  const active = makeLargeList('historical_active', 1, 3);
+  const inactive = { ...makeLargeList('historical_inactive', 2, 3), isActive: false };
+  const detachedWord = makeTestWord('historical_detached', 4, { listId: 'deleted_list' });
+  const malformedActive = { ...active, words: [...active.words, detachedWord] };
+  const storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [active.id],
+    currentPathPosition: active.id,
+    completedNormalSessionCount: 2,
+    wordProgress: {
+      historical_orphan: { seen: true, completedCount: 0, incorrectAttempts: 1, revealedCount: 0, difficult: true, recapDue: true },
+      [inactive.words[0].id]: { seen: true, completedCount: 0, incorrectAttempts: 1, revealedCount: 0, difficult: true, recapDue: true },
+      [detachedWord.id]: { seen: true, completedCount: 0, incorrectAttempts: 1, revealedCount: 0, difficult: true, recapDue: true }
+    }
+  };
+
+  assertEqual(hasDifficultWords(storage, [malformedActive, inactive]), false, 'Stale, inactive, and detached IDs must not make homepage review available.');
+  assertEqual(getDifficultWordCountForWordIds(storage, [malformedActive, inactive], [inactive.words[0].id]), 0, 'Session-scoped review must exclude a word whose source list is unavailable.');
+  assertEqual(getRecapWordCount(storage, [malformedActive, inactive]), 0, 'From earlier must count only currently resolvable active words.');
+  assertEqual(createPracticeSession([malformedActive, inactive], storage, true).words.length, 0, 'Empty eligible review must not fall back to ordinary practice.');
+  assertEqual(createPracticeSession([malformedActive, inactive], storage, false, true).words.length, 0, 'Inactive recap words must not enter a recap session.');
+  assertEqual(selectPreSessionRecapWord(storage, [malformedActive, inactive], []), undefined, 'Inactive recap words must not be automatically injected.');
+  assertEqual(getRecommendation(storage, [malformedActive, inactive]).kind, 'list', 'Review recommendation must disappear when every difficult entry is stale.');
+});
+
+test('valid active historical words keep exact Welsh-style review eligibility', () => {
+  const list = singleVariantGroupList('historical_dialect', 1);
+  const south = list.words.find(word => word.dialect === 'South Wales / Standard');
+  const north = list.words.find(word => word.dialect === 'North Wales');
+  assert(south && north, 'Expected dialect variants.');
+  const storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    settings: { ...createDefaultStorage().settings, dialectPreference: 'south_standard' },
+    wordProgress: {
+      [south.id]: { seen: true, completedCount: 0, incorrectAttempts: 1, revealedCount: 0, difficult: true },
+      [north.id]: { seen: true, completedCount: 0, incorrectAttempts: 1, revealedCount: 0, difficult: true }
+    }
+  };
+  const review = createPracticeSession([list], storage, true);
+
+  assertEqual(review.words.length, 1, 'A variant group must contribute at most one historical candidate.');
+  assertEqual(review.words[0]?.id, south.id, 'Review must preserve the exact difficult variant eligible for the active Welsh style.');
+});
+
+test('the app does not expose bundled words while authoritative content is loading', () => {
+  const appSource = readFileSync('src/App.tsx', 'utf8');
+  assert(/useState<WordList\[]>\(\[\]\)/.test(appSource), 'Initial public content must be empty until live loading or deliberate offline fallback resolves.');
+  assert(!/useState<WordList\[]>\(wordLists\)/.test(appSource), 'Bundled content must not temporarily satisfy historical progress IDs before Supabase resolves.');
+});

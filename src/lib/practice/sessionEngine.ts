@@ -288,6 +288,15 @@ function getTrackedCandidates(
   return candidates.filter(Boolean);
 }
 
+/**
+ * Historical progress is only a signal, never a content source. Resolve stored
+ * progress IDs through the currently loaded catalogue and its owning active
+ * learner-facing list before allowing them into a new session.
+ */
+function getHistoricalCandidateWords(lists: WordList[]) {
+  return mainWordLists(lists).flatMap(list => list.words.filter(word => word.listId === list.id));
+}
+
 function getReviewCandidates(words: PracticeWord[], storage: SpelioStorage) {
   return getTrackedCandidates(words, storage, word => {
     const progress = storage.wordProgress[word.id];
@@ -348,7 +357,7 @@ export function createPracticeSession(
   const eligibleLists = reviewDifficult || recapOnly
     ? reviewLists.filter(list => list.isActive && list.words.length > 0)
     : lists.filter(list => normalSelectedIds.includes(list.id) && list.isActive && list.words.length > 0);
-  const allCandidates = eligibleLists.flatMap(list => list.words);
+  const allCandidates = eligibleLists.flatMap(list => list.words.filter(word => word.listId === list.id));
   const dialectResolvedCandidates = filterDialectVariants(
     allCandidates,
     storage.settings.dialectPreference,
@@ -382,8 +391,7 @@ export function createPracticeSession(
 }
 
 export function getRecapWordCount(storage: SpelioStorage, lists: WordList[]) {
-  const activeWords = mainWordLists(lists).filter(list => list.isActive).flatMap(list => list.words);
-  return getResolvedRecapCandidates(activeWords, storage).length;
+  return getResolvedRecapCandidates(getHistoricalCandidateWords(lists), storage).length;
 }
 
 export function formatRecapWordCount(count: number) {
@@ -392,24 +400,23 @@ export function formatRecapWordCount(count: number) {
 }
 
 export function getDifficultWordCount(storage: SpelioStorage, lists: WordList[]) {
-  const activeWords = mainWordLists(lists).filter(list => list.isActive).flatMap(list => list.words);
-  return getDifficultCandidates(activeWords, storage).length;
+  return getDifficultCandidates(getHistoricalCandidateWords(lists), storage).length;
 }
 
 export function getDifficultWordCountForWordIds(storage: SpelioStorage, lists: WordList[], wordIds: string[]) {
   const scopedWordIds = new Set(wordIds);
   if (!scopedWordIds.size) return 0;
 
-  const activeWords = mainWordLists(lists)
-    .filter(list => list.isActive)
-    .flatMap(list => list.words)
+  const activeWords = getHistoricalCandidateWords(lists)
     .filter(word => scopedWordIds.has(word.id));
   return getDifficultCandidates(activeWords, storage).length;
 }
 
 export function getDifficultWordCountInList(storage: SpelioStorage, list: WordList) {
-  if (!list.isActive) return 0;
-  return getDifficultCandidates(list.words, storage).length;
+  // Explicit contextual support sessions deliberately permit their own scoped
+  // end-screen review; they still must resolve through that exact active list.
+  if (!list.isActive || list.collection?.isActive === false) return 0;
+  return getDifficultCandidates(list.words.filter(word => word.listId === list.id), storage).length;
 }
 
 function recapDifficultyRank(word: PracticeWord) {
@@ -455,8 +462,7 @@ export function selectPreSessionRecapWord(storage: SpelioStorage, lists: WordLis
   const sessionWordIds = new Set(sessionWords.map(word => word.id));
   const sessionLearningItemKeys = new Set(sessionWords.map(learningItemKey));
   const recentlyResolvedReviewWordIds = new Set(storage.recentlyResolvedReviewWordIds ?? []);
-  const activeWords = mainWordLists(lists).filter(list => list.isActive).flatMap(list => list.words);
-  const candidates = getRecapCandidates(activeWords, storage)
+  const candidates = getRecapCandidates(getHistoricalCandidateWords(lists), storage)
     .filter(word => {
       if (recentlyResolvedReviewWordIds.has(word.id)) return false;
       if (sessionWordIds.has(word.id)) return false;
@@ -479,6 +485,5 @@ export function classifySession(base: Pick<SessionResult, 'correctWords' | 'tota
 export function hasDifficultWords(storage: SpelioStorage, lists?: WordList[]) {
   if (!lists) return Object.values(storage.wordProgress).some(progress => progress.difficult === true);
 
-  const activeWords = mainWordLists(lists).filter(list => list.isActive).flatMap(list => list.words);
-  return getDifficultCandidates(activeWords, storage).length > 0;
+  return getDifficultCandidates(getHistoricalCandidateWords(lists), storage).length > 0;
 }

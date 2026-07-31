@@ -299,6 +299,7 @@ Behaviour:
 - Continue learning bypasses visible Review difficult words and From earlier; normal sessions may still receive automatic recap injection if eligible.
 - A low-priority From earlier link appears near the bottom only when eligible resolved `recapDue` words currently exist.
 - From earlier is an optional user-initiated recap of resolved or previously weak words that have been fixed enough to leave visible difficult review but are still worth reinforcing. It starts a recap session from eligible `recapDue` words, not from the current Review difficult words pool.
+- Review and recap candidates stored in local progress must resolve to the exact word in the currently loaded authoritative content and an active, normal learner-facing source list; stale, inactive, support-only, detached, or dialect-ineligible entries are not session candidates. Bundled content may provide this catalogue only as the deliberate offline fallback after live loading fails.
 - From earlier should feel low-pressure and must not be framed as a backlog or blocker.
 - If showing a From earlier count: hide it at 0, show exact counts for 1–5, and show “5+” above that. Never show large counts, percentages, progress bars, or “remaining” language.
 - Select word list opens the standalone Word Lists page.

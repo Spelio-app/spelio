@@ -172,7 +172,10 @@ export default function App() {
   const [practiceSessionKey, setPracticeSessionKey] = useState(0);
   const [practiceStartStorage, setPracticeStartStorage] = useState<SpelioStorage | null>(null);
   const [resetStatusVisible, setResetStatusVisible] = useState(false);
-  const [publicWordLists, setPublicWordLists] = useState<WordList[]>(wordLists);
+  // Do not expose the bundled snapshot as current content while the authoritative
+  // load is pending. loadPublicContent supplies that snapshot only after a real
+  // live-load failure, when it is the deliberate offline fallback.
+  const [publicWordLists, setPublicWordLists] = useState<WordList[]>([]);
   const [publicContentStatus, setPublicContentStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
   const [defaultAudioProvider, setDefaultAudioProvider] = useState<DefaultAudioProvider>(DEFAULT_AUDIO_PROVIDER);
   const [interfaceAudioClips, setInterfaceAudioClips] = useState<InterfaceAudioClipRegistry>(() => createInterfaceAudioRegistry(createDefaultInterfaceAudioClips()));
