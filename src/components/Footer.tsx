@@ -216,8 +216,9 @@ export function FeedbackFormContent({
     const trimmedMessage = message.trim();
     const nextErrors: { email?: string; message?: string } = {};
 
-    if (!trimmedMessage) nextErrors.message = t('footer.emailRequired');
+    if (!trimmedMessage) nextErrors.message = t('footer.messageRequired');
     if (trimmedMessage.length > maxFeedbackMessageLength) nextErrors.message = t('footer.messageTooLong');
+    if (!trimmedEmail) nextErrors.email = t('footer.emailRequired');
     if (trimmedEmail && !looksLikeEmail(trimmedEmail)) nextErrors.email = t('footer.invalidEmail');
     if (trimmedEmail.length > maxFeedbackEmailLength) nextErrors.email = t('footer.emailTooLong');
 
@@ -234,7 +235,7 @@ export function FeedbackFormContent({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: trimmedEmail || undefined,
+          email: trimmedEmail,
           message: trimmedMessage,
           feedbackSignals,
           learningMethods,
@@ -271,7 +272,7 @@ export function FeedbackFormContent({
 
           <form className="feedback-form" onSubmit={handleSubmit} noValidate>
             <label className="feedback-field">
-              <span>{t('footer.emailAddress')} <span className="feedback-optional">{t('footer.optional')}</span></span>
+              <span>{t('footer.emailAddress')}</span>
               <input
                 className="feedback-input"
                 type="email"
@@ -281,6 +282,7 @@ export function FeedbackFormContent({
                 aria-describedby={errors.email ? 'feedback-email-error' : undefined}
                 autoComplete="email"
                 maxLength={maxFeedbackEmailLength}
+                required
               />
               {errors.email && <span className="feedback-error" id="feedback-email-error">{errors.email}</span>}
             </label>

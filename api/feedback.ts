@@ -108,11 +108,15 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     return response.status(400).json({ ok: false, error: 'Message is too long' });
   }
 
+  if (!email) {
+    return response.status(400).json({ ok: false, error: 'Email address is required' });
+  }
+
   if (email.length > maxEmailLength) {
     return response.status(400).json({ ok: false, error: 'Email address is too long' });
   }
 
-  if (email && !emailPattern.test(email)) {
+  if (!emailPattern.test(email)) {
     return response.status(400).json({ ok: false, error: 'Invalid email address' });
   }
 
@@ -131,7 +135,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
   try {
     const text = [
       'Source: Spelio feedback form',
-      `Submitted email: ${email || 'Not provided'}`,
+      `Submitted email: ${email}`,
       `Timestamp: ${timestamp}`,
       '',
       'Quick notes:',
@@ -146,7 +150,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
     const html = `
       <h2>New Spelio feedback</h2>
       <p><strong>Source:</strong> Spelio feedback form</p>
-      <p><strong>Submitted email:</strong> ${escapeHtml(email || 'Not provided')}</p>
+      <p><strong>Submitted email:</strong> ${escapeHtml(email)}</p>
       <p><strong>Timestamp:</strong> ${escapeHtml(timestamp)}</p>
       <p><strong>Quick notes:</strong><br>${escapeHtml(formatStringList(feedbackSignals))}</p>
       <p><strong>Learning Welsh with:</strong><br>${escapeHtml(formatStringList(learningMethods))}</p>
@@ -157,7 +161,7 @@ export default async function handler(request: ApiRequest, response: ApiResponse
       from: fromEmail,
       to: toEmail,
       subject: 'New Spelio feedback',
-      replyTo: email || undefined,
+      replyTo: email,
       text,
       html
     });

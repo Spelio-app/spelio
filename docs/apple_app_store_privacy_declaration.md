@@ -18,7 +18,7 @@ Published answer:
 
 | Apple category | Declared data type | Why it was declared | Purpose | Linked to user | Used for tracking |
 | --- | --- | --- | --- | --- | --- |
-| Contact Info | Email Address | The optional feedback form allows users to provide an email address. | App Functionality | Yes | No |
+| Contact Info | Email Address | The feedback form requires users to provide an email address. | App Functionality | Yes | No |
 | User Content | Customer Support | Feedback/support messages are submitted through the app and sent via backend/email handling. | App Functionality | Yes | No |
 
 ### Data Not Linked to You
