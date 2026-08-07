@@ -38,7 +38,7 @@ const REVEALED_WORD_COMPLETION_DELAY_MS = 360;
 const SUCCESS_UNDERLINE_STAGGER_MS = 42;
 const SUCCESS_UNDERLINE_DURATION_MS = 160;
 const SUCCESS_CONFIRMATION_PAUSE_MS = 450;
-const UI_SOUND_VOLUME = 0.45;
+const UI_SOUND_VOLUME = 0.55;
 const UI_SOUND_PATHS = {
   error: '/sounds/error-soft.mp3',
   success: '/sounds/success-soft.mp3',
