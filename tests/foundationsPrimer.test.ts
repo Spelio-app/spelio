@@ -29,6 +29,36 @@ const practiceSessionSource = readFileSync('src/hooks/usePracticeSession.ts', 'u
 const primerAudioSource = readFileSync('src/lib/foundationsPrimerAudio.ts', 'utf8');
 const primerComponentSource = readFileSync('src/components/FoundationsPrimer.tsx', 'utf8');
 
+function containsMarkdownDecoration(value: string) {
+  return /\*\*\S[\s\S]*?\S\*\*/.test(value)
+    || /(^|[^*])\*\S(?:[^*]|\*(?!\*))*?\S\*(?!\*)/.test(value)
+    || /`[^`\n]+`/.test(value);
+}
+
+const exportedActivePrimerFormattingLeaks = foundationsExport.lists.flatMap(list => {
+  if (!list.isActive || !list.primerContent?.enabled) return [];
+  const primer = list.primerContent;
+  const fields = [
+    ['titleEn', primer.titleEn],
+    ['titleCy', primer.titleCy],
+    ['bodyEn', primer.bodyEn],
+    ['bodyCy', primer.bodyCy],
+    ...primer.soundItems.flatMap((item, index) => [
+      [`soundItems[${index}].label`, item.label],
+      [`soundItems[${index}].labelCy`, item.labelCy]
+    ] as Array<[string, string]>)
+  ] as Array<[string, string]>;
+  return fields
+    .filter(([, value]) => containsMarkdownDecoration(value))
+    .map(([field]) => `${list.id}.${field}`);
+});
+
+assertEqual(
+  exportedActivePrimerFormattingLeaks.join(','),
+  '',
+  'Active learner-facing primer titles, bilingual bodies, and sound labels must remain plain text.'
+);
+
 assert(documentShellSource.includes('viewport-fit=cover'), 'Document viewport should expose iOS safe-area insets.');
 assert(
   stylesSource.includes('padding-top:calc(18px + env(safe-area-inset-top))'),

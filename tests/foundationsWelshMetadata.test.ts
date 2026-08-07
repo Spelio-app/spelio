@@ -81,7 +81,7 @@ assertEqual(siList?.order, 40, 'SI should be inserted immediately after W.');
 assertEqual(mixedConfidence1?.order, 41, 'Mixed Confidence — Foundations 1 should move after SI.');
 assertEqual(siList?.primerContent?.titleEn, 'SI', 'SI should include an English primer title.');
 assertEqual(siList?.primerContent?.titleCy, 'SI', 'SI should include a Welsh primer title.');
-assert(Boolean(siList?.primerContent?.bodyEn?.includes('**si** often sounds')), 'SI should include English primer body copy.');
+assert(Boolean(siList?.primerContent?.bodyEn?.includes('si often sounds')), 'SI should include plain-text English primer body copy.');
 assert(Boolean(siList?.primerContent?.bodyCy?.includes('Yn Gymraeg')), 'SI should include Welsh primer body copy.');
 assertEqual(siList?.primerContent?.soundItems?.[0]?.label, 'SI (before a vowel)', 'SI should include the first English sound label.');
 assertEqual(siList?.primerContent?.soundItems?.[0]?.labelCy, 'SI (cyn llafariad)', 'SI should include the first Welsh sound label.');
@@ -92,7 +92,7 @@ assertEqual(siList?.primerContent?.soundItems?.[1]?.textToSpeak, 'sinema', 'SI s
 assertEqual(siList?.words?.length, 8, 'SI should include eight words.');
 assertEqual(siList?.words?.[3]?.englishPrompt, 'shop', 'SI word ordering should keep shop fourth.');
 assertEqual(siList?.words?.[3]?.welshAnswer, 'siop', 'SI shop answer should be siop.');
-assertEqual(siList?.words?.[3]?.usageNote, 'Notice how **si** sounds before another vowel.', 'Only siop should carry the SI usage note.');
+assertEqual(siList?.words?.[3]?.usageNote, 'Notice how si sounds before another vowel.', 'Only siop should carry the plain-text SI usage note.');
 assertEqual(siList?.words?.filter(word => word.usageNote?.trim()).length, 1, 'SI should not add extra usage notes.');
 assertEqual(mixedConfidence1?.words?.length, 10, 'Mixed Confidence — Foundations 1 should include ten words.');
 assertEqual(

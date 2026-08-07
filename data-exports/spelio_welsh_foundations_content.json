@@ -6822,8 +6822,8 @@
         "enabled": true,
         "titleEn": "SI",
         "titleCy": "SI",
-        "bodyEn": "In Welsh, **si** often sounds like the **\"sh\"** in the English word **\"shop\"**.\n\nThis is especially common when **si** is followed by another vowel, as in **siop** and **siarad**.\n\nThere are a few exceptions, but learning this pattern will help you recognise many common Welsh words.",
-        "bodyCy": "Yn Gymraeg, mae **si** yn aml yn swnio fel **\"sh\"** yn y gair Saesneg **\"shop\"**.\n\nMae hyn yn arbennig o gyffredin pan fydd **si** yn cael ei ddilyn gan lafariad arall, fel yn **siop** a **siarad**.\n\nMae ambell eithriad, ond bydd dysgu'r patrwm hwn yn eich helpu i adnabod llawer o eiriau Cymraeg cyffredin.",
+        "bodyEn": "In Welsh, si often sounds like the “sh” in the English word “shop”.\n\nThis is especially common when si is followed by another vowel, as in siop and siarad.\n\nThere are a few exceptions, but learning this pattern will help you recognise many common Welsh words.",
+        "bodyCy": "Yn Gymraeg, mae si yn aml yn swnio fel “sh” yn y gair Saesneg “shop”.\n\nMae hyn yn arbennig o gyffredin pan fydd si yn cael ei ddilyn gan lafariad arall, fel yn siop a siarad.\n\nMae ambell eithriad, ond bydd dysgu'r patrwm hwn yn eich helpu i adnabod llawer o eiriau Cymraeg cyffredin.",
         "soundItems": [
           {
             "id": "0-si-before-a-vowel",
@@ -6912,7 +6912,7 @@
           "dialect": "Both",
           "dialectNote": "",
           "variantGroupId": "",
-          "usageNote": "Notice how **si** sounds before another vowel."
+          "usageNote": "Notice how si sounds before another vowel."
         },
         {
           "id": "foundation_patterns_si_005",
