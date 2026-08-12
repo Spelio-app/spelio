@@ -296,6 +296,8 @@ Content:
 Behaviour:
 
 - Main CTA starts the recommended list/session.
+- For a returning learner, Continue learning must remain non-actionable until authoritative content and persisted progress have resolved a current/recommended active learner-facing list. Transient loading state must never start practice, and the displayed list and CTA destination must be the same resolved list.
+- Normal session creation must reject an unresolved, inactive, empty, or zero-eligible-conceptual-item list and return safely to the homepage/list-selection flow rather than constructing an empty `0 / 0` session.
 - Continue learning bypasses visible Review difficult words and From earlier; normal sessions may still receive automatic recap injection if eligible.
 - A low-priority From earlier link appears near the bottom only when eligible resolved `recapDue` words currently exist.
 - From earlier is an optional user-initiated recap of resolved or previously weak words that have been fixed enough to leave visible difficult review but are still worth reinforcing. It starts a recap session from eligible `recapDue` words, not from the current Review difficult words pool.

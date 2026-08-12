@@ -22,7 +22,7 @@ import { applyManualWordListSelection, clearSpelioStorageData, createDefaultStor
 import { getRecommendation } from './lib/practice/recommendations';
 import type { Recommendation } from './lib/practice/recommendations';
 import { getCompletionMilestoneForSession, markCompletionMilestoneShown, type CompletionMilestone } from './lib/practice/completionMilestones';
-import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createDirectListPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, createSessionReviewPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
+import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createDirectListPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, createSessionReviewPracticeStart, isResolvedListRecommendation, isValidNormalPracticeStart, type PracticeStart } from './lib/practice/sessionStart';
 import { getDifficultWordCount, getDifficultWordCountForWordIds, getDifficultWordCountInList, getRecapWordCount, hasDifficultWords } from './lib/practice/sessionEngine';
 import { formatCumulativeProgress } from './lib/practice/progress';
 import { normalizeSingleSelectedListIds, normalizeStorageWordListSelection } from './lib/practice/wordListSelection';
@@ -421,6 +421,15 @@ export default function App() {
     detachedContext: SharedWordListContext | null = sharedContext,
     options: { skipCollectionIntro?: boolean; skipPrimer?: boolean; returnScreen?: Screen } = {}
   ) {
+    if (start.mode === 'normal' && !isValidNormalPracticeStart(start, practiceLists)) {
+      setPendingPrimerLaunch(null);
+      setPracticeStartStorage(null);
+      setReviewMode(false);
+      setRecapMode(false);
+      setScreen('home');
+      return;
+    }
+
     if (start.review && !difficultWords) {
       setReviewMode(false);
       setReviewScope('global');
@@ -906,6 +915,11 @@ export default function App() {
       ? 'struggled'
       : 'returning';
   const showFirstTimeManualSelection = homeMode === 'first' && isFirstTimeManualWordListSelection(storage);
+  const homeRecommendationReady = publicContentStatus === 'ready' && (
+    recommendation.kind === 'review'
+      ? difficultWords
+      : isResolvedListRecommendation(recommendation, storage, publicWordLists)
+  );
 
   const activeScreen = screen === 'end' && !lastResult ? 'home' : screen;
   const spellingBasicsTopic = getSpellingBasicsTopic(getSpellingBasicsTopicSlugFromPath(window.location.pathname));
@@ -1107,6 +1121,7 @@ export default function App() {
     <Home
       mode={homeMode}
       recommendation={recommendation}
+      recommendationReady={homeRecommendationReady}
       recommendedStartingCollectionTitle={recommendedStartingCollectionTitle}
       showFirstTimeManualSelection={showFirstTimeManualSelection}
       sharedEntryMode={sharedContext?.mode ?? null}

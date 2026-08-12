@@ -19,6 +19,7 @@ type SharedEntryMode = 'normal-share' | 'practice-test';
 export function Home({
   mode,
   recommendation,
+  recommendationReady = true,
   recommendedStartingCollectionTitle,
   showFirstTimeManualSelection = false,
   sharedEntryMode,
@@ -46,6 +47,7 @@ export function Home({
 }: {
   mode: HomeMode;
   recommendation: Recommendation;
+  recommendationReady?: boolean;
   recommendedStartingCollectionTitle?: string | null;
   showFirstTimeManualSelection?: boolean;
   sharedEntryMode?: SharedEntryMode | null;
@@ -170,7 +172,7 @@ export function Home({
           )}
         </div>
 
-        <PrimaryButton className="home-primary" onClick={handlePrimary}>{primaryLabel}</PrimaryButton>
+        <PrimaryButton className="home-primary" onClick={handlePrimary} disabled={!recommendationReady}>{primaryLabel}</PrimaryButton>
 
         {!isFirst && progressSummary && (
           <p className="home-progress-line">{progressSummary}</p>

@@ -4,14 +4,16 @@ import { ArrowRight, ChevronRight } from './Icons';
 export function PrimaryButton({
   children,
   className = '',
-  onClick
+  onClick,
+  disabled = false
 }: {
   children: ReactNode;
   className?: string;
   onClick?: () => void;
+  disabled?: boolean;
 }) {
   return (
-    <button className={`primary-cta ${className}`.trim()} onClick={onClick}>
+    <button className={`primary-cta ${className}`.trim()} onClick={onClick} disabled={disabled}>
       <span>{children}</span>
       <ArrowRight size={30} strokeWidth={2.7} />
     </button>

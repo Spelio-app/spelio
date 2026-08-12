@@ -23,7 +23,7 @@ import {
 } from '../src/lib/practice/storage';
 import { getNormalContinuationRecommendation, getRecommendation, isListProgressionReady } from '../src/lib/practice/recommendations';
 import { getCompletionMilestoneForSession, markCompletionMilestoneShown } from '../src/lib/practice/completionMilestones';
-import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createDirectListPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, createSessionReviewPracticeStart } from '../src/lib/practice/sessionStart';
+import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createDirectListPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, createSessionReviewPracticeStart, isResolvedListRecommendation, isValidNormalPracticeStart } from '../src/lib/practice/sessionStart';
 import { addActiveInteractionTime, countLearnedSpellings, formatCumulativeProgress } from '../src/lib/practice/progress';
 import { validateImportPayload } from '../src/admin/repositories/importValidation';
 import { translate } from '../src/i18n';
@@ -91,6 +91,49 @@ test('brand-new storage defaults to the Welsh Foundations D / DD list', () => {
   assertEqual(storage.hasManualWordListSelection, false, 'Brand-new storage should not treat the default recommendation as manual selection.');
   assertEqual(storage.pendingManualListSelection, false, 'Brand-new storage should not have a pending manual-selection override.');
   assertEqual(isFirstTimeManualWordListSelection(storage), false, 'Brand-new storage should keep the Foundations recommendation flow.');
+});
+
+test('startup blocks unresolved returning-user continuation and repeated rapid starts', () => {
+  const storage = { ...numbersStorage(), lastSessionDate: '2026-08-01T12:00:00.000Z' };
+  const unresolvedRecommendation = getRecommendation(storage, []);
+  const firstAttempt = createPrimaryRecommendationPracticeStart(storage, []);
+  const rapidSecondAttempt = createPrimaryRecommendationPracticeStart(storage, []);
+
+  assertEqual(unresolvedRecommendation.listId, undefined, 'Empty startup content should not resolve a destination.');
+  assertEqual(unresolvedRecommendation.subtitle, 'Select a word list', 'This reproduces the transient homepage placeholder.');
+  assertEqual(isResolvedListRecommendation(unresolvedRecommendation, storage, []), false, 'The startup CTA must remain unavailable.');
+  assertEqual(isValidNormalPracticeStart(firstAttempt, []), false, 'The normal-session boundary must reject the first early click.');
+  assertEqual(isValidNormalPracticeStart(rapidSecondAttempt, []), false, 'A rapid repeated click must also be rejected.');
+  assertEqual(createPracticeSession([], firstAttempt.storage).words.length, 0, 'The previously unguarded start would have produced 0 / 0.');
+});
+
+test('resolved startup recommendation and normal start use the exact same active list', () => {
+  const storage = { ...numbersStorage(), lastSessionDate: '2026-08-01T12:00:00.000Z' };
+  const recommendation = getRecommendation(storage, wordLists);
+  const start = createPrimaryRecommendationPracticeStart(storage, wordLists);
+  const session = createPracticeSession(wordLists, start.storage);
+
+  assertEqual(recommendation.listId, 'foundations_numbers', 'Persisted returning path should resolve after content loads.');
+  assertEqual(isResolvedListRecommendation(recommendation, storage, wordLists), true, 'The CTA should become usable once its list resolves.');
+  assertEqual(isValidNormalPracticeStart(start, wordLists), true, 'The resolved normal start should pass the boundary.');
+  assertEqual(start.storage.selectedListIds[0], recommendation.listId, 'CTA destination must match displayed recommendation.');
+  assertEqual(session.words.length > 0, true, 'The resolved start should create a non-empty practice session.');
+  assertEqual(session.words.every(word => word.listId === recommendation.listId), true, 'Every session word should belong to the displayed list.');
+});
+
+test('normal-session boundary rejects empty, inactive, and mismatched resolved lists', () => {
+  const emptyList: WordList = { ...wordLists[0], id: 'startup_empty', isActive: true, words: [] };
+  const inactiveList: WordList = { ...wordLists[0], id: 'startup_inactive', isActive: false };
+  const emptyStart = createDirectListPracticeStart(createDefaultStorage(), emptyList);
+  const inactiveStart = createDirectListPracticeStart(createDefaultStorage(), inactiveList);
+  const validList = wordLists.find(list => list.id === 'foundations_numbers');
+  assert(validList, 'Expected foundations_numbers to exist.');
+  const mismatchedStart = createDirectListPracticeStart(createDefaultStorage(), validList);
+  mismatchedStart.recommendation = { ...mismatchedStart.recommendation!, listId: 'another-list' };
+
+  assertEqual(isValidNormalPracticeStart(emptyStart, [emptyList]), false, 'An empty resolved list must not start normal practice.');
+  assertEqual(isValidNormalPracticeStart(inactiveStart, [inactiveList]), false, 'An inactive resolved list must not start normal practice.');
+  assertEqual(isValidNormalPracticeStart(mismatchedStart, wordLists), false, 'Displayed and selected list IDs must not diverge.');
 });
 
 test('stored selected list and current path are preserved for existing learners', () => {

@@ -4,6 +4,7 @@ import type { Recommendation } from './recommendations';
 import { getListDisplayName } from './wordListDisplay';
 import { getNormalContinuationRecommendation, getRecommendation } from './recommendations';
 import { applyPracticeStartListSelection, type SpelioStorage } from './storage';
+import { filterDialectVariants } from './sessionEngine';
 
 export type PracticeStart = {
   mode: 'normal' | 'review' | 'recap';
@@ -20,6 +21,36 @@ function withPracticeStarted(storage: SpelioStorage): SpelioStorage {
     ...storage,
     hasStartedPracticeSession: true
   };
+}
+
+/** The final safety check before any ordinary (including detached) session is mounted. */
+export function isValidNormalPracticeStart(start: PracticeStart, lists: WordList[]) {
+  if (start.mode !== 'normal' || start.review || start.recap || start.storage.selectedListIds.length !== 1) return false;
+
+  const selectedListId = start.storage.selectedListIds[0];
+  if (start.recommendation?.kind !== 'list' || start.recommendation.listId !== selectedListId) return false;
+  const list = lists.find(candidate => candidate.id === selectedListId && candidate.isActive);
+  if (!list) return false;
+
+  const ownedWords = list.words.filter(word => word.listId === list.id);
+  if (ownedWords.length === 0) return false;
+
+  return filterDialectVariants(ownedWords, start.storage.settings.dialectPreference, start.storage).length > 0;
+}
+
+export function isResolvedListRecommendation(
+  recommendation: Recommendation,
+  storage: SpelioStorage,
+  lists: WordList[]
+) {
+  if (recommendation.kind !== 'list' || !recommendation.listId) return false;
+  return isValidNormalPracticeStart({
+    mode: 'normal',
+    review: false,
+    recap: false,
+    storage: applyPracticeStartListSelection(storage, recommendation.listId),
+    recommendation
+  }, lists);
 }
 
 export function createReviewPracticeStart(storage: SpelioStorage): PracticeStart {
