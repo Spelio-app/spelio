@@ -23,6 +23,7 @@ import {
 } from '../src/lib/practice/storage';
 import { getNormalContinuationRecommendation, getRecommendation, isListProgressionReady } from '../src/lib/practice/recommendations';
 import { getCompletionMilestoneForSession, markCompletionMilestoneShown } from '../src/lib/practice/completionMilestones';
+import { getEndScreenRecommendation } from '../src/lib/practice/endScreenState';
 import { createDetachedSupportPracticeStart, createDetachedSupportReviewPracticeStart, createDirectListPracticeStart, createNormalContinuationPracticeStart, createPrimaryRecommendationPracticeStart, createRecapPracticeStart, createReviewPracticeStart, createSessionReviewPracticeStart, isResolvedListRecommendation, isValidNormalPracticeStart } from '../src/lib/practice/sessionStart';
 import { addActiveInteractionTime, countLearnedSpellings, formatCumulativeProgress } from '../src/lib/practice/progress';
 import { validateImportPayload } from '../src/admin/repositories/importValidation';
@@ -1432,6 +1433,84 @@ test('end-screen difficult review is scoped to the just-completed session words'
   assertEqual(reviewSession.words.some(word => word.id === bathroom.id), false, 'Session-scoped review must not include Bathroom from an unrelated Practice Library list.');
   assertEqual(reviewStart.storage.selectedListIds[0], mixedConfidence3.id, 'Session-scoped review must not overwrite selectedListIds.');
   assertEqual(reviewStart.storage.currentPathPosition, mixedConfidence3.id, 'Session-scoped review must not overwrite currentPathPosition.');
+  assertEqual(getEndScreenRecommendation(storage, lists, true).kind, 'review', 'Eligible difficult words from the completed session should preserve the end-screen review recommendation.');
+});
+
+test('end screen names an incomplete current list when difficult words exist only outside the completed session', () => {
+  const current = {
+    ...makeLargeList('test_end_current', 1, 12),
+    name: 'Current list name'
+  };
+  const earlier = {
+    ...makeLargeList('test_end_earlier', 2, 1),
+    name: 'Earlier list'
+  };
+  const lists = [current, earlier];
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [current.id],
+    currentPathPosition: current.id
+  };
+
+  for (const word of current.words.slice(0, 10)) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-08-12T12:00:00.000Z');
+  }
+  storage = applyWordProgressPatch(storage, earlier.words[0], { incorrect: true }, '2026-08-12T12:01:00.000Z');
+
+  const globalRecommendation = getRecommendation(storage, lists);
+  const endRecommendation = getEndScreenRecommendation(storage, lists, false);
+
+  assertEqual(globalRecommendation.kind, 'review', 'An unresolved difficult word elsewhere should still drive the homepage recommendation.');
+  assertEqual(endRecommendation.kind, 'list', 'A clean end screen should use normal continuation instead of an unrelated global review.');
+  assertEqual(endRecommendation.listId, current.id, 'A 10-word session must continue its list while unseen conceptual items remain.');
+  assertEqual(endRecommendation.subtitle, current.name, 'The end screen should name the known current-list destination.');
+});
+
+test('end screen names nextListId after the current list becomes progression-complete', () => {
+  const current = {
+    ...makeLargeList('test_end_complete', 1, 10),
+    name: 'Completed list',
+    nextListId: 'test_end_next'
+  };
+  const next = {
+    ...makeLargeList('test_end_next', 2, 3),
+    name: 'Actual next list'
+  };
+  const unrelated = makeLargeList('test_end_unrelated', 3, 1);
+  const lists = [current, next, unrelated];
+  let storage: SpelioStorage = {
+    ...createDefaultStorage(),
+    selectedListIds: [current.id],
+    currentPathPosition: current.id
+  };
+
+  for (const word of current.words) {
+    storage = applyWordProgressPatch(storage, word, { completed: true, cleanCompleted: true }, '2026-08-12T12:00:00.000Z');
+  }
+  storage = {
+    ...storage,
+    lastSessionResult: {
+      ...completionResult(current.id),
+      totalWords: 10,
+      correctWords: 10
+    }
+  };
+  storage = applyWordProgressPatch(storage, unrelated.words[0], { incorrect: true }, '2026-08-12T12:01:00.000Z');
+
+  const recommendation = getEndScreenRecommendation(storage, lists, false);
+
+  assertEqual(recommendation.kind, 'list', 'A clean completed session should continue normal progression.');
+  assertEqual(recommendation.listId, next.id, 'The end recommendation should follow the usable nextListId.');
+  assertEqual(recommendation.subtitle, next.name, 'The end screen should name the resolved next-list destination.');
+});
+
+test('end recommendation remains unresolved while list content is unavailable', () => {
+  const storage = numbersStorage();
+  const recommendation = getEndScreenRecommendation(storage, [], false);
+
+  assertEqual(recommendation.kind, 'list', 'Unavailable content should not invent a review or alternate progression state.');
+  assertEqual(recommendation.listId, undefined, 'Unavailable content should not invent a destination list ID.');
+  assertEqual(isResolvedListRecommendation(recommendation, storage, []), false, 'The end-screen readiness guard should keep an unresolved continuation non-actionable.');
 });
 
 test('homepage difficult review remains global across unresolved normal-learning words', () => {

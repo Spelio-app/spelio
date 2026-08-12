@@ -487,6 +487,7 @@ export const en = {
     practiseAgain: 'Practise again',
     backToHome: 'Back to home',
     keepBuilding: 'Keep building from your selected word list',
+    loadingRecommendation: 'Loading your next word list…',
     pickUpWhereLeftOff: 'Pick up where you left off',
     practiseMixAgain: 'Practise this list again',
     practiseThisListAgain: 'Practise this list again',

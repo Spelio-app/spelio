@@ -27,7 +27,7 @@ import { getDifficultWordCount, getDifficultWordCountForWordIds, getDifficultWor
 import { formatCumulativeProgress } from './lib/practice/progress';
 import { normalizeSingleSelectedListIds, normalizeStorageWordListSelection } from './lib/practice/wordListSelection';
 import { createSharedWordListContext, createSharedWordListEffectiveStorage, findActiveWordListBySlug, getSharedWordListSlugFromPath, isPracticeTestShareMode, restoreSharedWordListProgression, type SharedWordListContext } from './lib/wordListSharing';
-import { getEndScreenProgressSummary } from './lib/practice/endScreenState';
+import { getEndScreenProgressSummary, getEndScreenRecommendation } from './lib/practice/endScreenState';
 import { getCustomPublicIdFromPath, getCustomSharePublicIdFromPath } from './lib/customListRoutes';
 import { getCollectionDisplayName, getListDisplayName, getWelshFoundationsCollectionDisplayName } from './lib/practice/wordListDisplay';
 import { resetPublicPageScrollToTop } from './lib/scrollRestoration';
@@ -218,6 +218,16 @@ export default function App() {
   const lastSessionDifficultWordCount = useMemo(
     () => getDifficultWordCountForWordIds(storage, publicWordLists, lastSessionReviewWordIds),
     [lastSessionReviewWordIds, publicWordLists, storage.settings.dialectPreference, storage.wordProgress]
+  );
+  const endRecommendation = useMemo(
+    () => getEndScreenRecommendation(
+      storage,
+      publicWordLists,
+      lastSessionDifficultWordCount > 0,
+      t,
+      interfaceLanguage
+    ),
+    [interfaceLanguage, lastSessionDifficultWordCount, publicWordLists, storage, t]
   );
   const recapWordCount = useMemo(() => getRecapWordCount(storage, publicWordLists), [publicWordLists, storage.settings.dialectPreference, storage.wordProgress]);
   const recommendation = useMemo<Recommendation>(
@@ -920,6 +930,11 @@ export default function App() {
       ? difficultWords
       : isResolvedListRecommendation(recommendation, storage, publicWordLists)
   );
+  const endRecommendationReady = publicContentStatus === 'ready' && (
+    endRecommendation.kind === 'review'
+      ? lastSessionDifficultWordCount > 0
+      : isResolvedListRecommendation(endRecommendation, storage, publicWordLists)
+  );
 
   const activeScreen = screen === 'end' && !lastResult ? 'home' : screen;
   const spellingBasicsTopic = getSpellingBasicsTopic(getSpellingBasicsTopicSlugFromPath(window.location.pathname));
@@ -1048,7 +1063,8 @@ export default function App() {
   ) : activeScreen === 'end' && lastResult ? (
     <EndScreen
       result={lastResult}
-      recommendation={recommendation}
+      recommendation={endRecommendation}
+      recommendationReady={endRecommendationReady}
       milestone={activeCompletionMilestone}
       progressSummary={getEndScreenProgressSummary(endProgressSummary, completedSupportPractice)}
       hasDifficultWords={lastSessionDifficultWordCount > 0}

@@ -74,6 +74,7 @@ function formatRecommendationBridge(recommendationText: string, t: Translate) {
 export function EndScreen({
   result,
   recommendation,
+  recommendationReady,
   milestone,
   progressSummary,
   hasDifficultWords,
@@ -93,6 +94,7 @@ export function EndScreen({
 }: {
   result: SessionResult;
   recommendation: Recommendation;
+  recommendationReady: boolean;
   milestone?: CompletionMilestone | null;
   progressSummary?: string | null;
   hasDifficultWords: boolean;
@@ -119,9 +121,10 @@ export function EndScreen({
   const isFullCatalogueMilestone = milestone?.kind === 'full-catalogue';
   const shouldPrioritiseReview = !isSharedSession && !isContextualSession && hasDifficultWords && recommendation.kind === 'review';
   const shouldChooseAnotherList = !isSharedSession && !isContextualSession && recommendation.kind === 'choose_list';
-  const recommendedListName = !hasDifficultWords && recommendation.kind === 'review'
-    ? t('end.keepBuilding')
-    : recommendation.subtitle;
+  const requiresResolvedRecommendation = !isSharedSession && !isContextualSession && !hasMilestone;
+  const recommendedListName = recommendationReady
+    ? recommendation.subtitle
+    : t('end.loadingRecommendation');
   const milestoneRecommendationBridge = hasMilestone && recommendedListName
     ? formatRecommendationBridge(recommendedListName, t)
     : null;
@@ -200,7 +203,11 @@ export function EndScreen({
           )}
         </div>
 
-        <PrimaryButton className="end-primary" onClick={handlePrimary}>{primaryTitle}</PrimaryButton>
+        <PrimaryButton
+          className="end-primary"
+          onClick={handlePrimary}
+          disabled={requiresResolvedRecommendation && !recommendationReady}
+        >{primaryTitle}</PrimaryButton>
         {shouldPrioritiseContextualReview && contextualReturn && (
           <button className="end-contextual-return-link" type="button" onClick={contextualReturn.onClick}>
             {contextualReturn.label}

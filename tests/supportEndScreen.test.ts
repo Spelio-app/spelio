@@ -89,12 +89,14 @@ assert(
   'End-screen primary hover must not introduce child-specific or ancestor surface states.'
 );
 assert(
-  endSource.includes('<PrimaryButton className="end-primary" onClick={handlePrimary}>{primaryTitle}</PrimaryButton>') &&
+  endSource.includes('disabled={requiresResolvedRecommendation && !recommendationReady}') &&
+    endSource.includes("t('end.loadingRecommendation')") &&
+    !endSource.includes("t('end.keepBuilding')") &&
     endSource.includes(': onContinue;') &&
     endSource.includes('? onReview') &&
     endSource.includes('? onChangeLists') &&
     endSource.includes('? onMilestoneContinue'),
-  'Every end-screen primary label should retain the shared button and its existing continuation, review, list, and milestone handlers.'
+  'Every end-screen primary label should retain its existing handlers while unresolved normal recommendations stay disabled and visibly loading.'
 );
 assert(
   /\.public-app\[data-theme="dark"\]:is\([\s\S]*?\.public-app-end-background[\s\S]*?\) :is\(\.how-page,\.practice-app,\.end-bg\)\{[\s\S]*?min-height:100vh;[\s\S]*?background:var\(--bg-app\);/.test(stylesSource),

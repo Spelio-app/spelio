@@ -487,6 +487,7 @@ export const cy = {
     practiseAgain: 'Ymarfer eto',
     backToHome: 'Yn ôl i’r hafan',
     keepBuilding: 'Parhewch gyda’ch rhestr eiriau ddewisol',
+    loadingRecommendation: 'Yn llwytho eich rhestr eiriau nesaf…',
     pickUpWhereLeftOff: 'Parhau o ble wnaethoch chi stopio',
     practiseMixAgain: 'Ymarfer y rhestr hon eto',
     practiseThisListAgain: 'Ymarfer y rhestr hon eto',
