@@ -930,6 +930,7 @@ export default function App() {
       ? difficultWords
       : isResolvedListRecommendation(recommendation, storage, publicWordLists)
   );
+  const homeRecommendationPending = homeMode !== 'first' && !sharedList && publicContentStatus === 'loading';
   const endRecommendationReady = publicContentStatus === 'ready' && (
     endRecommendation.kind === 'review'
       ? lastSessionDifficultWordCount > 0
@@ -1138,6 +1139,7 @@ export default function App() {
       mode={homeMode}
       recommendation={recommendation}
       recommendationReady={homeRecommendationReady}
+      recommendationPending={homeRecommendationPending}
       recommendedStartingCollectionTitle={recommendedStartingCollectionTitle}
       showFirstTimeManualSelection={showFirstTimeManualSelection}
       sharedEntryMode={sharedContext?.mode ?? null}

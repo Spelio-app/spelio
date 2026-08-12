@@ -12,6 +12,7 @@ import { formatRecapWordCount } from '../lib/practice/sessionEngine';
 import { shouldIgnoreGlobalKeyboardShortcut } from '../lib/keyboardShortcuts';
 import { NativeUpdateNotice } from './NativeUpdateNotice';
 import { useInstallPrompt } from '../hooks/useInstallPrompt';
+import { getHomeRecommendationSupport } from '../lib/practice/homeRecommendationDisplay';
 
 type HomeMode = 'first' | 'returning' | 'struggled';
 type SharedEntryMode = 'normal-share' | 'practice-test';
@@ -20,6 +21,7 @@ export function Home({
   mode,
   recommendation,
   recommendationReady = true,
+  recommendationPending = false,
   recommendedStartingCollectionTitle,
   showFirstTimeManualSelection = false,
   sharedEntryMode,
@@ -48,6 +50,7 @@ export function Home({
   mode: HomeMode;
   recommendation: Recommendation;
   recommendationReady?: boolean;
+  recommendationPending?: boolean;
   recommendedStartingCollectionTitle?: string | null;
   showFirstTimeManualSelection?: boolean;
   sharedEntryMode?: SharedEntryMode | null;
@@ -103,9 +106,13 @@ export function Home({
   const mobileHeroClass = isFirst ? '' : 'home-shell-mobile-centered';
   const revisitCountLabel = formatRecapWordCount(recapWordCount);
   const showRecapEntry = !isSharedEntry && mode === 'returning' && revisitCountLabel !== null && !shouldPrioritiseReview;
-  const supportText = isFirst
-    ? showFirstTimeManualSelection ? recommendation.subtitle : recommendedStartingCollectionTitle
-    : recommendation.subtitle;
+  const recommendationSupport = getHomeRecommendationSupport({
+    isFirst,
+    recommendation,
+    recommendationPending,
+    recommendedStartingCollectionTitle,
+    showFirstTimeManualSelection
+  });
 
   return (
     <main className="homepage-bg">
@@ -162,11 +169,14 @@ export function Home({
             ) : homeHeading}
           </h1>
 
-          {supportText && (
+          {(recommendationSupport.text || recommendationSupport.preserveSpace) && (
             <>
               {isFirst && !showFirstTimeManualSelection && <p className="foundations-primer-kicker">{t('home.recommendedStartingPoint')}</p>}
-              <p className="home-support">
-                {supportText}
+              <p
+                className={`home-support ${recommendationSupport.preserveSpace ? 'home-support-pending' : ''}`.trim()}
+                aria-hidden={recommendationSupport.preserveSpace || undefined}
+              >
+                {recommendationSupport.text}
               </p>
             </>
           )}

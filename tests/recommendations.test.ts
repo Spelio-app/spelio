@@ -28,6 +28,7 @@ import { createDetachedSupportPracticeStart, createDetachedSupportReviewPractice
 import { addActiveInteractionTime, countLearnedSpellings, formatCumulativeProgress } from '../src/lib/practice/progress';
 import { validateImportPayload } from '../src/admin/repositories/importValidation';
 import { translate } from '../src/i18n';
+import { getHomeRecommendationSupport } from '../src/lib/practice/homeRecommendationDisplay';
 
 declare function require(name: string): { readFileSync(path: string, encoding: string): string };
 
@@ -99,10 +100,18 @@ test('startup blocks unresolved returning-user continuation and repeated rapid s
   const unresolvedRecommendation = getRecommendation(storage, []);
   const firstAttempt = createPrimaryRecommendationPracticeStart(storage, []);
   const rapidSecondAttempt = createPrimaryRecommendationPracticeStart(storage, []);
+  const startupSupport = getHomeRecommendationSupport({
+    isFirst: false,
+    recommendation: unresolvedRecommendation,
+    recommendationPending: true,
+    showFirstTimeManualSelection: false
+  });
 
   assertEqual(unresolvedRecommendation.listId, undefined, 'Empty startup content should not resolve a destination.');
   assertEqual(unresolvedRecommendation.subtitle, 'Select a word list', 'This reproduces the transient homepage placeholder.');
   assertEqual(isResolvedListRecommendation(unresolvedRecommendation, storage, []), false, 'The startup CTA must remain unavailable.');
+  assertEqual(startupSupport.text, null, 'Unresolved returning startup must not render the Select word list placeholder.');
+  assertEqual(startupSupport.preserveSpace, true, 'Unresolved returning startup should preserve the recommendation line height.');
   assertEqual(isValidNormalPracticeStart(firstAttempt, []), false, 'The normal-session boundary must reject the first early click.');
   assertEqual(isValidNormalPracticeStart(rapidSecondAttempt, []), false, 'A rapid repeated click must also be rejected.');
   assertEqual(createPracticeSession([], firstAttempt.storage).words.length, 0, 'The previously unguarded start would have produced 0 / 0.');
@@ -113,13 +122,34 @@ test('resolved startup recommendation and normal start use the exact same active
   const recommendation = getRecommendation(storage, wordLists);
   const start = createPrimaryRecommendationPracticeStart(storage, wordLists);
   const session = createPracticeSession(wordLists, start.storage);
+  const resolvedSupport = getHomeRecommendationSupport({
+    isFirst: false,
+    recommendation,
+    recommendationPending: false,
+    showFirstTimeManualSelection: false
+  });
 
   assertEqual(recommendation.listId, 'foundations_numbers', 'Persisted returning path should resolve after content loads.');
   assertEqual(isResolvedListRecommendation(recommendation, storage, wordLists), true, 'The CTA should become usable once its list resolves.');
+  assertEqual(resolvedSupport.text, recommendation.subtitle, 'The resolved recommendation title should appear unchanged.');
+  assertEqual(resolvedSupport.preserveSpace, false, 'Resolved recommendations should render normally.');
   assertEqual(isValidNormalPracticeStart(start, wordLists), true, 'The resolved normal start should pass the boundary.');
   assertEqual(start.storage.selectedListIds[0], recommendation.listId, 'CTA destination must match displayed recommendation.');
   assertEqual(session.words.length > 0, true, 'The resolved start should create a non-empty practice session.');
   assertEqual(session.words.every(word => word.listId === recommendation.listId), true, 'Every session word should belong to the displayed list.');
+});
+
+test('genuine no-list state retains Select word list copy after startup resolves', () => {
+  const recommendation = getRecommendation(createDefaultStorage(), []);
+  const support = getHomeRecommendationSupport({
+    isFirst: false,
+    recommendation,
+    recommendationPending: false,
+    showFirstTimeManualSelection: false
+  });
+
+  assertEqual(support.text, 'Select a word list', 'A resolved genuine no-list state should retain its existing guidance.');
+  assertEqual(support.preserveSpace, false, 'A genuine no-list state should display copy rather than an empty placeholder.');
 });
 
 test('normal-session boundary rejects empty, inactive, and mismatched resolved lists', () => {
