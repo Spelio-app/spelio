@@ -12,6 +12,20 @@ export type NativeInputContext = {
   inputPosition: number;
 };
 
+export function shouldRestorePracticeInputAfterSettings({
+  activePracticeSession,
+  nativeMobileKeyboard,
+  otherOverlayOpen,
+  restorationRequested = true
+}: {
+  activePracticeSession: boolean;
+  nativeMobileKeyboard: boolean;
+  otherOverlayOpen: boolean;
+  restorationRequested?: boolean;
+}) {
+  return restorationRequested && activePracticeSession && nativeMobileKeyboard && !otherOverlayOpen;
+}
+
 export type NativeBufferUpdateKind = 'append' | 'deletion' | 'replacement' | 'duplicate' | 'no-op';
 
 export type NativeInputTrace = {

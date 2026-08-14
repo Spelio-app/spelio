@@ -103,8 +103,7 @@ assertEqual(
   'Settings should lock background scrolling and restore the original page position on close.'
 );
 assertEqual(
-  practiceSource.includes('className="modal-close" onClick={onClose}') &&
-    practiceSource.includes('<button className="settings-close-button" onClick={onClose}>'),
+  (practiceSource.match(/onClick=\{\(\) => onClose\(\)\}/g) ?? []).length === 2,
   true,
   'Both existing Settings close controls should keep their close handlers.'
 );

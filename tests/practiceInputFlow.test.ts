@@ -6,7 +6,7 @@ import {
   processPracticeInput,
   removeLastPracticeInput
 } from '../src/lib/practice/inputFlow';
-import { createNativeInputCoordinator, type NativeInputScheduler } from '../src/lib/practice/nativeInput';
+import { createNativeInputCoordinator, shouldRestorePracticeInputAfterSettings, type NativeInputScheduler } from '../src/lib/practice/nativeInput';
 import {
   isPracticeInputDiagnosticsEnabled,
   safeCharacterCount,
@@ -35,6 +35,18 @@ const { readFileSync } = require('fs') as {
 };
 
 const practiceSource = readFileSync('src/components/Practice.tsx', 'utf8');
+const settingsLifecycle = practiceSource.slice(
+  practiceSource.indexOf('const handleSettingsModalOpenChange'),
+  practiceSource.indexOf('function applyWordLists')
+);
+const settingsLauncher = practiceSource.slice(
+  practiceSource.indexOf('const SettingsLauncher'),
+  practiceSource.indexOf('export function SettingsModal')
+);
+const settingsModal = practiceSource.slice(
+  practiceSource.indexOf('export function SettingsModal'),
+  practiceSource.indexOf('const WordListRow')
+);
 
 assertEqual(
   practiceSource.includes('event.target !== mobileInputRef.current && event.key.length === 1'),
@@ -65,6 +77,49 @@ assertEqual(
   practiceSource.includes("eventType: 'beforeinput'") && practiceSource.includes("decision: 'observed-only'"),
   true,
   'beforeinput must remain trace-only and must not validate printable characters.'
+);
+
+const activeNativePractice = {
+  activePracticeSession: true,
+  nativeMobileKeyboard: true,
+  otherOverlayOpen: false
+};
+assertEqual(shouldRestorePracticeInputAfterSettings(activeNativePractice), true, 'Closing Settings without changes must restore active native practice input.');
+assertEqual(shouldRestorePracticeInputAfterSettings({ ...activeNativePractice }), true, 'Changing a normal setting must not prevent practice input restoration.');
+assertEqual(shouldRestorePracticeInputAfterSettings({ ...activeNativePractice, restorationRequested: false }), false, 'Reset progress must suppress practice input restoration.');
+assertEqual(shouldRestorePracticeInputAfterSettings({ ...activeNativePractice, activePracticeSession: false }), false, 'Navigation away or session completion must prevent stale focus restoration.');
+assertEqual(shouldRestorePracticeInputAfterSettings({ ...activeNativePractice, otherOverlayOpen: true }), false, 'Another practice overlay must prevent hidden-input focus restoration.');
+assertEqual(shouldRestorePracticeInputAfterSettings({ ...activeNativePractice, nativeMobileKeyboard: false }), false, 'Desktop and custom touch-keyboard paths must keep their existing focus behaviour.');
+assertEqual(
+  settingsLauncher.indexOf('flushSync(() => setOpen(false));') < settingsLauncher.indexOf('onOpenChange(false, options);'),
+  true,
+  'Settings must unmount and remove inert modal state before restoring practice focus.'
+);
+assertEqual(settingsLifecycle.includes('blurMobileInput();'), true, 'Opening Settings must suspend the native input behind the modal.');
+assertEqual(
+  settingsLifecycle.includes('shouldRestorePracticeInputAfterSettings({') && settingsLifecycle.includes('restorePracticeInputFocus();'),
+  true,
+  'Closing Settings must reuse the existing practice focus restoration mechanism.'
+);
+assertEqual(
+  /function handleResetConfirm\(\)[\s\S]*?onClose\(\{ restorePracticeFocus: false \}\);[\s\S]*?onResetProgress\(\);/.test(settingsModal),
+  true,
+  'Reset confirmation must close Settings without reopening the practice keyboard.'
+);
+assertEqual(
+  settingsLifecycle.includes('handlePracticeInput(') || settingsLifecycle.includes('removeLastInput(') || settingsLifecycle.includes('revealNext('),
+  false,
+  'Restoring focus after Settings must not move the answer position or process a duplicate character.'
+);
+assertEqual(
+  practiceSource.includes('modal || settingsModalOpenRef.current || !shouldUseMobileKeyboard()'),
+  true,
+  'Automatic native-input focus must remain suppressed while Settings is open.'
+);
+assertEqual(
+  /if \(modal \|\| isComplete \|\| settingsModalOpenRef\.current\) \{[\s\S]*?finishPeek\(false, false\);/.test(practiceSource),
+  true,
+  'Overlay cleanup must not indirectly restore hidden-input focus behind Settings.'
 );
 assertEqual(isPracticeInputDiagnosticsEnabled('?input-debug=1'), true, 'The diagnostic should require its narrow query opt-in.');
 assertEqual(isPracticeInputDiagnosticsEnabled('?input-debug=0'), false, 'The diagnostic must remain disabled in normal use.');

@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, ElementType, KeyboardEvent as ReactKeyboardEvent, MouseEvent, PointerEvent, ReactNode } from 'react';
-import { createPortal } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import * as LucideIcons from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import { ArrowRight, BookOpen, CheckCircle2, ChevronUp, Copy, GitBranch, Grid2X2, GraduationCap, Lightbulb, MessageCircle, Search, Share2, ShieldCheck, SquareArrowLeft, X } from 'lucide-react';
@@ -30,7 +30,7 @@ import {
   toUnicodeCodePoints,
   type PracticeInputDiagnosticEntry
 } from '../lib/practice/inputDiagnostics';
-import { createNativeInputCoordinator, type NativeInputContext } from '../lib/practice/nativeInput';
+import { createNativeInputCoordinator, shouldRestorePracticeInputAfterSettings, type NativeInputContext } from '../lib/practice/nativeInput';
 import type { PendingMobileTypo } from '../hooks/usePracticeSession';
 import type { MobileTypoGraceEvent } from '../lib/practice/mobileTypoGrace';
 import { recordMobileTypoGraceEvent } from '../lib/practice/typoGraceAnalytics';
@@ -952,7 +952,7 @@ export function Practice({
 
   useEffect(() => {
     if (modal || isComplete || settingsModalOpenRef.current) {
-      finishPeek(false);
+      finishPeek(false, false);
       clearEnglishPromptPeek();
       clearPostAnswerEnglishConfirmation();
       clearRecallPauseTimer();
@@ -1103,7 +1103,7 @@ export function Practice({
   }, [activateEnglishPromptPeek, beginPeekHold, clearScheduledSpellingHintAudioReplay, currentWord, endPeekHold, handlePracticeInput, isComplete, modal, playAudio, practiceTestMode, restorePracticeInputFocus, revealNext]);
 
   useEffect(() => {
-    if (!currentWord || isComplete || modal || !shouldUseMobileKeyboard() || customTouchKeyboardActive) return;
+    if (!currentWord || isComplete || modal || settingsModalOpenRef.current || !shouldUseMobileKeyboard() || customTouchKeyboardActive) return;
 
     const timer = window.setTimeout(() => {
       focusMobileInput();
@@ -1178,7 +1178,7 @@ export function Practice({
     onStorageChange({ ...storage, settings: nextSettings });
   }, [onStorageChange, storage]);
 
-  const handleSettingsModalOpenChange = useCallback((open: boolean) => {
+  const handleSettingsModalOpenChange = useCallback((open: boolean, options?: SettingsModalCloseOptions) => {
     settingsModalOpenRef.current = open;
     setSettingsModalOpen(open);
     if (open) {
@@ -1189,10 +1189,15 @@ export function Practice({
       if (currentWord) setRecallPauseVisibility({ wordId: currentWord.id, visible: true });
       blurMobileInput();
       peekActivatedRef.current = false;
-    } else {
+    } else if (shouldRestorePracticeInputAfterSettings({
+      activePracticeSession: Boolean(currentWord && hasWords && !isComplete),
+      nativeMobileKeyboard: shouldUseMobileKeyboard() && !customTouchKeyboardActive,
+      otherOverlayOpen: Boolean(modal),
+      restorationRequested: options?.restorePracticeFocus !== false
+    })) {
       restorePracticeInputFocus();
     }
-  }, [clearPostAnswerEnglishConfirmation, clearRecallPauseTimer, currentWord?.id, finishPeek, restorePracticeInputFocus]);
+  }, [clearPostAnswerEnglishConfirmation, clearRecallPauseTimer, currentWord?.id, customTouchKeyboardActive, finishPeek, hasWords, isComplete, modal, restorePracticeInputFocus]);
 
   function applyWordLists(selectedIds: string[]) {
     const ids = normalizeSingleSelectedListIds(selectedIds, lists);
@@ -1945,6 +1950,10 @@ function Radio({ active = false }: { active?: boolean }) {
   );
 }
 
+type SettingsModalCloseOptions = {
+  restorePracticeFocus?: boolean;
+};
+
 const SettingsLauncher = memo(function SettingsLauncher({
   settings,
   showKeyboardPreference,
@@ -1959,16 +1968,22 @@ const SettingsLauncher = memo(function SettingsLauncher({
   showKeyboardPreference: boolean;
   activePracticeSession: boolean;
   onChange: (patch: Partial<SpelioSettings>) => void;
-  onOpenChange: (open: boolean) => void;
+  onOpenChange: (open: boolean, options?: SettingsModalCloseOptions) => void;
   onResetProgress: () => void;
   initiallyOpen?: boolean;
   t: Translate;
 }) {
   const [open, setOpen] = useState(initiallyOpen);
 
-  const setModalOpen = useCallback((nextOpen: boolean) => {
-    setOpen(nextOpen);
-    onOpenChange(nextOpen);
+  const setModalOpen = useCallback((nextOpen: boolean, options?: SettingsModalCloseOptions) => {
+    if (!nextOpen) {
+      flushSync(() => setOpen(false));
+      onOpenChange(false, options);
+      return;
+    }
+
+    setOpen(true);
+    onOpenChange(true);
   }, [onOpenChange]);
 
   return (
@@ -1982,7 +1997,7 @@ const SettingsLauncher = memo(function SettingsLauncher({
           showKeyboardPreference={showKeyboardPreference}
           activePracticeSession={activePracticeSession}
           onChange={onChange}
-          onClose={() => setModalOpen(false)}
+          onClose={(options) => setModalOpen(false, options)}
           onResetProgress={onResetProgress}
           t={t}
         />
@@ -2004,7 +2019,7 @@ export function SettingsModal({
   showKeyboardPreference?: boolean;
   activePracticeSession: boolean;
   onChange: (patch: Partial<SpelioSettings>) => void;
-  onClose: () => void;
+  onClose: (options?: SettingsModalCloseOptions) => void;
   onResetProgress: () => void;
   t: Translate;
 }) {
@@ -2065,7 +2080,7 @@ export function SettingsModal({
     };
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const focusInitialControl = window.requestAnimationFrame(() => {
       initialCloseButtonRef.current?.focus({ preventScroll: true });
     });
@@ -2154,7 +2169,7 @@ export function SettingsModal({
 
   function handleResetConfirm() {
     setConfirmingReset(false);
-    onClose();
+    onClose({ restorePracticeFocus: false });
     onResetProgress();
   }
 
@@ -2179,7 +2194,7 @@ export function SettingsModal({
       <section ref={dialogRef} className="modal modal-small settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabIndex={-1}>
         <div className="settings-modal-header flex items-center justify-between">
           <h2 className="modal-title" id="settings-title">{t('settings.title')}</h2>
-          <button ref={initialCloseButtonRef} className="modal-close" onClick={onClose} aria-label={t('settings.close')}>×</button>
+          <button ref={initialCloseButtonRef} className="modal-close" onClick={() => onClose()} aria-label={t('settings.close')}>×</button>
         </div>
 
         <div className="settings-modal-body">
@@ -2339,7 +2354,7 @@ export function SettingsModal({
         </div>
 
         <div className="settings-modal-footer">
-          <button className="settings-close-button" onClick={onClose}>{t('settings.closeButton')}</button>
+          <button className="settings-close-button" onClick={() => onClose()}>{t('settings.closeButton')}</button>
         </div>
       </section>
 
