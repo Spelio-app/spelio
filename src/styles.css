@@ -2597,7 +2597,7 @@
 }
 
 .install-page-content{
-  width:min(100%,680px);
+  width:min(100%,760px);
   margin-top:54px;
 }
 
@@ -2620,15 +2620,16 @@
 
 .install-options{
   display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
   gap:14px;
   margin-top:34px;
 }
 
 .install-option{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:22px;
+  display:grid;
+  grid-template-rows:1fr auto;
+  align-items:start;
+  gap:24px;
   border:1px solid var(--border-subtle, #dfd9d1);
   border-radius:8px;
   background:var(--bg-surface-raised, rgba(255,255,255,.72));
@@ -2664,7 +2665,6 @@
   line-height:1.2;
 }
 
-.install-option-subheading,
 .install-option-body p{
   margin:10px 0 0;
   color:var(--text-secondary, #5f6b78);
@@ -2672,26 +2672,9 @@
   line-height:1.5;
 }
 
-.install-option-subheading{
-  color:var(--text-primary, #071522);
-  font-weight:750;
-}
-
-.install-option-body p + p{
-  margin-top:8px;
-}
-
 .install-option-action{
-  flex:0 0 auto;
   display:flex;
   align-items:center;
-}
-
-.install-option-actions{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:10px;
 }
 
 .install-badge-link{
@@ -2700,8 +2683,7 @@
   border-radius:7px;
 }
 
-.install-badge-link:focus-visible,
-.install-web-button:focus-visible{
+.install-badge-link:focus-visible{
   outline:0;
   box-shadow:0 0 0 3px var(--focus-ring, rgba(217,0,0,.18));
 }
@@ -2712,57 +2694,22 @@
   height:auto;
 }
 
-.install-web-button{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-height:42px;
-  border:0;
-  border-radius:999px;
-  background:var(--red, #d90000);
-  color:#fff;
-  padding:0 18px;
-  font-size:15px;
-  font-weight:800;
-  line-height:1;
-  white-space:nowrap;
-  box-shadow:0 16px 34px rgba(217,0,0,.16);
-  transition:background .16s ease-out,transform .16s ease-out;
-  text-decoration:none;
-}
-
-.install-feedback-link{
+.install-support{
+  margin:24px 0 0;
   color:var(--text-secondary, #5f6b78);
   font-size:14px;
+  line-height:1.5;
+  text-align:center;
+}
+
+.install-support a{
+  color:var(--text-secondary, #5f6b78);
   font-weight:700;
   text-underline-offset:3px;
 }
 
-.install-feedback-link:hover{
+.install-support a:hover{
   color:var(--text-primary, #071522);
-}
-
-.install-web-button:hover{
-  background:var(--red-dark, #c60000);
-}
-
-.install-web-button:active{
-  transform:scale(.98);
-}
-
-.install-installed-badge{
-  display:inline-flex;
-  align-items:center;
-  min-height:42px;
-  border-radius:999px;
-  border:1px solid var(--border-subtle, #dfd9d1);
-  background:var(--bg-surface-soft, #ebe7e1);
-  color:var(--text-secondary, #5f6b78);
-  padding:0 16px;
-  font-size:14px;
-  font-weight:780;
-  line-height:1;
-  white-space:nowrap;
 }
 
 .spelio-social-links{
@@ -4264,11 +4211,11 @@
   }
 
   .install-options{
+    grid-template-columns:1fr;
     margin-top:28px;
   }
 
   .install-option{
-    display:grid;
     gap:18px;
     padding:20px;
   }

@@ -19,7 +19,7 @@ export type InstallPromptState = {
 
 type InstallPromptSubscriber = (state: InstallPromptState) => void;
 
-// Disabled during Google Play closed testing; reconsider after the wider Android release.
+// Keep browser use unobtrusive; PWA installability remains available through browser controls.
 export const ENABLE_AUTOMATIC_PWA_INSTALL_PROMPT = false;
 
 type NavigatorWithInstallHints = Navigator & {

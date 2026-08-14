@@ -9,7 +9,7 @@ Spelio has a small, remotely configurable update notice for native wrapper relea
 - **Installed browser PWA:** The existing `display-mode: standalone` / install-prompt helpers distinguish installed web-app presentation where needed. A PWA is still hosted web content and does not receive a native-store update notice.
 - **Ordinary website:** It receives neither native-store notice. Web and PWA updates continue to use the existing service worker behaviour.
 
-The official iOS destination is `https://apps.apple.com/app/spelio/id6783524504`. There is not yet a public Google Play URL in the repository; `GOOGLE_PLAY_URL` remains blank during closed testing. The repository has no general announcement or web-update prompt to integrate with. Existing anonymous analytics are feature-specific, so this notice does not add a separate tracking path.
+The official iOS destination is `https://apps.apple.com/app/spelio/id6783524504`, and the public Google Play destination is `https://play.google.com/store/apps/details?id=app.spelio.twa`. The repository has no general announcement or web-update prompt to integrate with. Existing anonymous analytics are feature-specific, so this notice does not add a separate tracking path.
 
 ## Policy and caching
 

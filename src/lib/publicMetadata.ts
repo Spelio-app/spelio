@@ -71,8 +71,8 @@ const staticPages: Record<string, { title: string; description: string; robots?:
     robots: 'noindex, follow'
   },
   '/install': {
-    title: 'Install Spelio',
-    description: 'Install Spelio from the App Store, use it in your browser, or add it as a web app where supported.'
+    title: 'Get Spelio',
+    description: 'Download Spelio for Android from Google Play or for iPhone and iPad from the App Store.'
   },
   '/custom-list/new': {
     title: 'Create a custom Welsh spelling list - Spelio',

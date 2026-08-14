@@ -68,6 +68,14 @@ assertEqual(about.title, 'About Spelio', 'About should retain its route-specific
 const privacy = resolvePublicMetadata({ origin, pathname: '/privacy', interfaceLanguage: 'en', wordLists });
 assertEqual(privacy.title, 'Privacy - Spelio', 'Privacy should retain its route-specific title.');
 
+const install = resolvePublicMetadata({ origin, pathname: '/install', interfaceLanguage: 'en', wordLists });
+assertEqual(install.title, 'Get Spelio', 'Install page metadata should use the public Get Spelio title.');
+assert(
+  install.description.includes('Google Play') && install.description.includes('App Store'),
+  'Install page metadata should describe both public mobile stores.'
+);
+assertEqual(install.description.includes('web app'), false, 'Install page metadata should not promote PWA installation.');
+
 const spellingBasicsW = resolvePublicMetadata({
   origin,
   pathname: '/spelling-basics/w',
