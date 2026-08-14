@@ -184,12 +184,8 @@ export const en = {
     intro: 'Download Spelio for Android, iPhone or iPad.',
     optionsLabel: 'Download Spelio',
     appStoreEyebrow: 'iPhone and iPad',
-    appStoreTitle: 'App Store',
-    appStoreBody: 'Download Spelio from the App Store.',
     appStoreBadgeAlt: 'Download on the App Store',
     googlePlayEyebrow: 'Android',
-    googlePlayTitle: 'Google Play',
-    googlePlayBody: 'Download Spelio from Google Play.',
     googlePlayBadgeAlt: 'Get it on Google Play',
     supportPrompt: 'Having a problem or suggestion?',
     supportLink: 'Send feedback'

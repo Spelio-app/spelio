@@ -184,12 +184,8 @@ export const cy = {
     intro: 'Lawrlwythwch Spelio ar gyfer Android, iPhone neu iPad.',
     optionsLabel: 'Lawrlwytho Spelio',
     appStoreEyebrow: 'iPhone ac iPad',
-    appStoreTitle: 'App Store',
-    appStoreBody: 'Lawrlwythwch Spelio o’r App Store.',
     appStoreBadgeAlt: 'Lawrlwytho o’r App Store',
     googlePlayEyebrow: 'Android',
-    googlePlayTitle: 'Google Play',
-    googlePlayBody: 'Lawrlwythwch Spelio o Google Play.',
     googlePlayBadgeAlt: 'Cael ar Google Play',
     supportPrompt: 'Oes gennych broblem neu awgrym?',
     supportLink: 'Anfon adborth'

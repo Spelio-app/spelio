@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import type { ReactNode } from 'react';
 import {
   APP_STORE_URL,
   GOOGLE_PLAY_URL,
@@ -28,31 +27,23 @@ export function InstallPage({
   const installOptionOrder = useMemo(() => getInstallOptionOrder(installDevice), [installDevice]);
   const installOptions = {
     appStore: (
-      <InstallOption
+      <InstallStoreOption
         key="appStore"
-        primary={installDevice === 'ios'}
-        eyebrow={t('install.appStoreEyebrow')}
-        title={t('install.appStoreTitle')}
-        body={t('install.appStoreBody')}
-        action={(
-          <a className="install-badge-link" href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
-            <img src="/store-badges/app-store.svg" alt={t('install.appStoreBadgeAlt')} />
-          </a>
-        )}
+        badgeClassName="install-badge-link-app-store"
+        badgeSrc="/store-badges/app-store.svg"
+        badgeAlt={t('install.appStoreBadgeAlt')}
+        href={APP_STORE_URL}
+        label={t('install.appStoreEyebrow')}
       />
     ),
     googlePlay: (
-      <InstallOption
+      <InstallStoreOption
         key="googlePlay"
-        primary={installDevice === 'android'}
-        eyebrow={t('install.googlePlayEyebrow')}
-        title={t('install.googlePlayTitle')}
-        body={t('install.googlePlayBody')}
-        action={(
-          <a className="install-badge-link" href={GOOGLE_PLAY_URL} target="_blank" rel="noopener noreferrer">
-            <img src="/store-badges/google-play.svg" alt={t('install.googlePlayBadgeAlt')} />
-          </a>
-        )}
+        badgeClassName="install-badge-link-google-play"
+        badgeSrc="/store-badges/google-play.svg"
+        badgeAlt={t('install.googlePlayBadgeAlt')}
+        href={GOOGLE_PLAY_URL}
+        label={t('install.googlePlayEyebrow')}
       />
     )
   };
@@ -83,27 +74,30 @@ export function InstallPage({
   );
 }
 
-function InstallOption({
-  action,
-  body,
-  eyebrow,
-  primary,
-  title
+function InstallStoreOption({
+  badgeAlt,
+  badgeClassName,
+  badgeSrc,
+  href,
+  label
 }: {
-  action?: ReactNode;
-  body: ReactNode;
-  eyebrow: string;
-  primary?: boolean;
-  title: string;
+  badgeAlt: string;
+  badgeClassName: string;
+  badgeSrc: string;
+  href: string;
+  label: string;
 }) {
   return (
-    <section className={['install-option', primary ? 'install-option-primary' : ''].filter(Boolean).join(' ')}>
-      <div className="install-option-copy">
-        <p className="install-option-eyebrow">{eyebrow}</p>
-        <h2>{title}</h2>
-        <div className="install-option-body">{typeof body === 'string' ? <p>{body}</p> : body}</div>
-      </div>
-      {action && <div className="install-option-action">{action}</div>}
-    </section>
+    <div className="install-store-option">
+      <p className="install-store-label">{label}</p>
+      <a
+        className={`install-badge-link ${badgeClassName}`}
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img src={badgeSrc} alt={badgeAlt} />
+      </a>
+    </div>
   );
 }
