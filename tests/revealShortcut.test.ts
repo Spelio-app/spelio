@@ -1,5 +1,9 @@
 import { KEYBOARD_REVEAL_HOLD_DELAY_MS, handleRevealShortcutKeyDown, handleRevealShortcutKeyUp, type RevealShortcutAction } from '../src/lib/practice/revealShortcut';
 
+declare function require(name: string): {
+  readFileSync?: (path: string, encoding: string) => string;
+};
+
 function assertEqual<T>(actual: T, expected: T, message: string) {
   if (actual !== expected) {
     throw new Error(`${message}\nExpected: ${String(expected)}\nActual: ${String(actual)}`);
@@ -9,6 +13,48 @@ function assertEqual<T>(actual: T, expected: T, message: string) {
 function assertActions(actual: RevealShortcutAction[], expected: RevealShortcutAction[], message: string) {
   assertEqual(actual.join('|'), expected.join('|'), message);
 }
+
+const { readFileSync } = require('fs') as {
+  readFileSync: (path: string, encoding: string) => string;
+};
+const practiceSource = readFileSync('src/components/Practice.tsx', 'utf8');
+const revealClickHandler = practiceSource.slice(
+  practiceSource.indexOf('function handleRevealLetter'),
+  practiceSource.indexOf('function handleRevealPointerDown')
+);
+const revealPointerDownHandler = practiceSource.slice(
+  practiceSource.indexOf('function handleRevealPointerDown'),
+  practiceSource.indexOf('function handleRevealPointerUp')
+);
+const revealPointerUpHandler = practiceSource.slice(
+  practiceSource.indexOf('function handleRevealPointerUp'),
+  practiceSource.indexOf('function showLocalStatus')
+);
+
+assertEqual(
+  /if \(revealHandledByPointerRef\.current\) \{[\s\S]*?revealHandledByPointerRef\.current = false;[\s\S]*?event\?\.currentTarget\.blur\(\);[\s\S]*?restorePracticeInputFocus\(\);[\s\S]*?return;[\s\S]*?\}/.test(revealClickHandler),
+  true,
+  'The click following a touch Reveal must restore the native practice input instead of leaving focus on the button.'
+);
+assertEqual(
+  revealPointerDownHandler.indexOf('event.preventDefault();') < revealPointerDownHandler.indexOf('focusMobileInput();'),
+  true,
+  'Touch Reveal must prevent the button focus default before preserving the native input focus.'
+);
+assertEqual(
+  revealPointerUpHandler.includes('revealHandledByPointerRef.current = true;') &&
+    (revealPointerUpHandler.match(/revealNext\(\)/g) ?? []).length === 1 &&
+    revealClickHandler.indexOf('if (revealHandledByPointerRef.current)') < revealClickHandler.indexOf('revealNext();'),
+  true,
+  'A pointer Reveal must run the existing reveal logic once and consume its following click without a duplicate reveal.'
+);
+assertEqual(
+  revealClickHandler.includes('if (peekActivatedRef.current)') &&
+    revealClickHandler.indexOf('if (peekActivatedRef.current)') < revealClickHandler.indexOf('revealNext();') &&
+    revealPointerUpHandler.includes('if (!didPeek) {'),
+  true,
+  'A completed hold-to-peek must restore focus without also revealing another letter.'
+);
 
 assertEqual(
   KEYBOARD_REVEAL_HOLD_DELAY_MS >= 450 && KEYBOARD_REVEAL_HOLD_DELAY_MS <= 550,

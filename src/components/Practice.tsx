@@ -1211,6 +1211,8 @@ export function Practice({
 
     if (revealHandledByPointerRef.current) {
       revealHandledByPointerRef.current = false;
+      event?.currentTarget.blur();
+      restorePracticeInputFocus();
       return;
     }
 
