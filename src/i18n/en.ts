@@ -30,7 +30,10 @@ export const en = {
     howSpelioWorks: 'How Spelio works',
     installSpelio: 'Get Spelio',
     openMenu: 'Open menu',
-    menuLabel: 'Homepage menu'
+    menuLabel: 'Homepage menu',
+    loadFailureHeading: 'Unable to load Spelio',
+    loadFailureBody: 'Please check your connection and try again.',
+    tryAgain: 'Try again'
   },
   nativeUpdate: {
     title: 'A Spelio update is available',

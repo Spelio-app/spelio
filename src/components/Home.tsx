@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Logo } from './Logo';
 import { PrimaryButton, ActionRow } from './Buttons';
 import { Footer, shareCurrentPublicPage } from './Footer';
@@ -22,6 +22,9 @@ export function Home({
   recommendation,
   recommendationReady = true,
   recommendationPending = false,
+  learnerContentState = 'ready',
+  revealInitialLearnerContent = false,
+  onInitialLearnerContentReveal,
   recommendedStartingCollectionTitle,
   showFirstTimeManualSelection = false,
   sharedEntryMode,
@@ -43,6 +46,7 @@ export function Home({
   settings,
   onSettingsChange,
   onResetProgress,
+  onRetryContent,
   interfaceLanguage,
   onInterfaceLanguageChange,
   t
@@ -51,6 +55,9 @@ export function Home({
   recommendation: Recommendation;
   recommendationReady?: boolean;
   recommendationPending?: boolean;
+  learnerContentState?: 'loading' | 'ready' | 'failed';
+  revealInitialLearnerContent?: boolean;
+  onInitialLearnerContentReveal?: () => void;
   recommendedStartingCollectionTitle?: string | null;
   showFirstTimeManualSelection?: boolean;
   sharedEntryMode?: SharedEntryMode | null;
@@ -72,11 +79,14 @@ export function Home({
   settings: SpelioSettings;
   onSettingsChange: (patch: Partial<SpelioSettings>) => void;
   onResetProgress: () => void;
+  onRetryContent: () => void;
   interfaceLanguage: InterfaceLanguage;
   onInterfaceLanguageChange: (language: InterfaceLanguage) => void;
   t: Translate;
 }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [startupRevealActive, setStartupRevealActive] = useState(false);
+  const startupRevealConsumedRef = useRef(false);
   const isFirst = mode === 'first';
   const isSharedEntry = Boolean(sharedEntryMode);
   const isPracticeTestEntry = sharedEntryMode === 'practice-test';
@@ -113,6 +123,18 @@ export function Home({
     recommendedStartingCollectionTitle,
     showFirstTimeManualSelection
   });
+
+  useLayoutEffect(() => {
+    if (
+      learnerContentState !== 'ready' ||
+      !revealInitialLearnerContent ||
+      startupRevealConsumedRef.current
+    ) return;
+
+    startupRevealConsumedRef.current = true;
+    setStartupRevealActive(true);
+    onInitialLearnerContentReveal?.();
+  }, [learnerContentState, onInitialLearnerContentReveal, revealInitialLearnerContent]);
 
   return (
     <main className="homepage-bg">
@@ -159,62 +181,72 @@ export function Home({
           <Logo animateCursor />
         </div>
 
-        <div className={`home-copy ${isFirst ? 'home-copy-first' : ''}`}>
-          <h1 className={`home-heading ${isFirst ? 'home-heading-first' : ''}`}>
-            {isFirst ? (
-              <>
-                <span className="home-heading-primary-line">{t('home.firstHeadingLine1')}</span>
-                <span className="home-heading-method-line">{t('home.firstHeadingLine2')}</span>
-              </>
-            ) : homeHeading}
-          </h1>
-
-          {(recommendationSupport.text || recommendationSupport.preserveSpace) && (
+        <div
+          className={`home-learner-region ${startupRevealActive ? 'home-learner-region-startup-reveal' : ''}`.trim()}
+          aria-live={learnerContentState === 'failed' ? 'polite' : undefined}
+        >
+          {learnerContentState === 'ready' ? (
             <>
-              {isFirst && !showFirstTimeManualSelection && <p className="foundations-primer-kicker">{t('home.recommendedStartingPoint')}</p>}
-              <p
-                className={`home-support ${recommendationSupport.preserveSpace ? 'home-support-pending' : ''}`.trim()}
-                aria-hidden={recommendationSupport.preserveSpace || undefined}
-              >
-                {recommendationSupport.text}
-              </p>
+              <div className={`home-copy ${isFirst ? 'home-copy-first' : ''}`}>
+                <h1 className={`home-heading ${isFirst ? 'home-heading-first' : ''}`}>
+                  {isFirst ? (
+                    <>
+                      <span className="home-heading-primary-line">{t('home.firstHeadingLine1')}</span>
+                      <span className="home-heading-method-line">{t('home.firstHeadingLine2')}</span>
+                    </>
+                  ) : homeHeading}
+                </h1>
+
+                {recommendationSupport.text && (
+                  <>
+                    {isFirst && !showFirstTimeManualSelection && <p className="foundations-primer-kicker">{t('home.recommendedStartingPoint')}</p>}
+                    <p className="home-support">{recommendationSupport.text}</p>
+                  </>
+                )}
+              </div>
+
+              <PrimaryButton className="home-primary" onClick={handlePrimary} disabled={!recommendationReady}>{primaryLabel}</PrimaryButton>
+
+              {!isFirst && progressSummary && (
+                <p className="home-progress-line">{progressSummary}</p>
+              )}
+
+              <div className="action-list home-action-list">
+                {shouldPrioritiseReview && hasDifficultWords && (
+                  <ActionRow
+                    icon={<Play size={30} />}
+                    title={t('home.continueLearning')}
+                    accent="red"
+                    arrowVariant="arrow"
+                    onClick={onContinue}
+                  />
+                )}
+
+                <ActionRow
+                  icon={<ListCheck className={selectListIconClassName} size={30} />}
+                  title={selectListLabel}
+                  arrowVariant="arrow"
+                  onClick={onSelectList}
+                />
+
+                {showRecapEntry && (
+                  <ActionRow
+                    icon={<RotateCcw size={28} />}
+                    title={t('home.revisitWords')}
+                    trailing={revisitCountLabel}
+                    arrowVariant="arrow"
+                    onClick={onRecapReview}
+                  />
+                )}
+              </div>
             </>
-          )}
-        </div>
-
-        <PrimaryButton className="home-primary" onClick={handlePrimary} disabled={!recommendationReady}>{primaryLabel}</PrimaryButton>
-
-        {!isFirst && progressSummary && (
-          <p className="home-progress-line">{progressSummary}</p>
-        )}
-
-        <div className="action-list home-action-list">
-          {shouldPrioritiseReview && hasDifficultWords && (
-            <ActionRow
-              icon={<Play size={30} />}
-              title={t('home.continueLearning')}
-              accent="red"
-              arrowVariant="arrow"
-              onClick={onContinue}
-            />
-          )}
-
-          <ActionRow
-            icon={<ListCheck className={selectListIconClassName} size={30} />}
-            title={selectListLabel}
-            arrowVariant="arrow"
-            onClick={onSelectList}
-          />
-
-          {showRecapEntry && (
-            <ActionRow
-              icon={<RotateCcw size={28} />}
-              title={t('home.revisitWords')}
-              trailing={revisitCountLabel}
-              arrowVariant="arrow"
-              onClick={onRecapReview}
-            />
-          )}
+          ) : learnerContentState === 'failed' ? (
+            <div className="home-load-failure">
+              <h1>{t('home.loadFailureHeading')}</h1>
+              <p>{t('home.loadFailureBody')}</p>
+              <PrimaryButton className="home-load-retry" onClick={onRetryContent}>{t('home.tryAgain')}</PrimaryButton>
+            </div>
+          ) : null}
         </div>
 
         <div className="homepage-lower-settings">

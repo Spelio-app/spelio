@@ -177,6 +177,8 @@ export default function App() {
   // live-load failure, when it is the deliberate offline fallback.
   const [publicWordLists, setPublicWordLists] = useState<WordList[]>([]);
   const [publicContentStatus, setPublicContentStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
+  const [publicContentLoadAttempt, setPublicContentLoadAttempt] = useState(0);
+  const [revealInitialHomeContent, setRevealInitialHomeContent] = useState(false);
   const [defaultAudioProvider, setDefaultAudioProvider] = useState<DefaultAudioProvider>(DEFAULT_AUDIO_PROVIDER);
   const [interfaceAudioClips, setInterfaceAudioClips] = useState<InterfaceAudioClipRegistry>(() => createInterfaceAudioRegistry(createDefaultInterfaceAudioClips()));
   const [activeCustomList, setActiveCustomList] = useState<WordList | null>(null);
@@ -189,6 +191,7 @@ export default function App() {
   const [completedSupportPractice, setCompletedSupportPractice] = useState<{ listId: string; returnTo: string } | null>(null);
   const [pendingPrimerLaunch, setPendingPrimerLaunch] = useState<PendingPrimerLaunch | null>(null);
   const resetStatusTimerRef = useRef<number | null>(null);
+  const initialPublicContentResolutionRef = useRef(true);
   const interfaceLanguage = storage.settings.interfaceLanguage;
   const t = useMemo(() => createTranslator(interfaceLanguage), [interfaceLanguage]);
   const practiceLists = useMemo(
@@ -321,6 +324,10 @@ export default function App() {
         setDefaultAudioProvider(content.defaultAudioProvider);
         setInterfaceAudioClips(content.interfaceAudioClips);
         setPublicContentStatus('ready');
+        if (initialPublicContentResolutionRef.current) {
+          initialPublicContentResolutionRef.current = false;
+          if (screen === 'home') setRevealInitialHomeContent(true);
+        }
         setStorage(previous => {
           const normalized = normalizeStorageWordListSelection(previous, content.lists);
           setSharedContext(createSharedContextFromRoute(normalized, content.lists));
@@ -336,10 +343,10 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [publicContentLoadAttempt]);
 
   function retryPublicContentLoad() {
-    window.location.reload();
+    setPublicContentLoadAttempt(attempt => attempt + 1);
   }
 
   function updateStorage(next: SpelioStorage) {
@@ -946,7 +953,7 @@ export default function App() {
     ? getCollectionIntroForPracticeStart(activePrimerList, interfaceLanguage)
     : null;
 
-  if (publicContentStatus === 'failed' && publicWordLists.length === 0) {
+  if (publicContentStatus === 'failed' && publicWordLists.length === 0 && activeScreen !== 'home') {
     return <OfflineState onRetry={retryPublicContentLoad} />;
   }
 
@@ -1140,6 +1147,9 @@ export default function App() {
       recommendation={recommendation}
       recommendationReady={homeRecommendationReady}
       recommendationPending={homeRecommendationPending}
+      learnerContentState={publicContentStatus}
+      revealInitialLearnerContent={revealInitialHomeContent}
+      onInitialLearnerContentReveal={() => setRevealInitialHomeContent(false)}
       recommendedStartingCollectionTitle={recommendedStartingCollectionTitle}
       showFirstTimeManualSelection={showFirstTimeManualSelection}
       sharedEntryMode={sharedContext?.mode ?? null}
@@ -1161,6 +1171,7 @@ export default function App() {
       settings={storage.settings}
       onSettingsChange={updateSettings}
       onResetProgress={resetProgress}
+      onRetryContent={retryPublicContentLoad}
       interfaceLanguage={interfaceLanguage}
       onInterfaceLanguageChange={updateInterfaceLanguage}
       t={t}

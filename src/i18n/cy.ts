@@ -30,7 +30,10 @@ export const cy = {
     howSpelioWorks: 'Sut mae Spelio’n gweithio',
     installSpelio: 'Cael Spelio',
     openMenu: 'Agor dewislen',
-    menuLabel: 'Dewislen yr hafan'
+    menuLabel: 'Dewislen yr hafan',
+    loadFailureHeading: 'Methu llwytho Spelio',
+    loadFailureBody: 'Gwiriwch eich cysylltiad a rhowch gynnig arall arni.',
+    tryAgain: 'Rhowch gynnig arall arni'
   },
   nativeUpdate: {
     title: 'Mae diweddariad i Spelio ar gael',
